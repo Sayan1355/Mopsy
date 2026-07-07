@@ -9,24 +9,33 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "#F9FAFB", // Very soft gray/off-white
-        foreground: "#111827", // Dark charcoal for text
-        primary: "#FFFFFF", // Pure white for cards
-        secondary: "#F3F4F6", // Light gray for subtle backgrounds
-        accent: "#0EA5E9", // Bright, friendly blue (like the screenshot)
-        success: "#10B981", // Crisp green
-        warning: "#FBBF24", // Cheerful yellow
-        danger: "#EF4444", // Rose/Red
-        muted: "#6B7280", // Medium gray for secondary text
-        border: "#E5E7EB" // Soft border color
+        background: "#0B0D12",
+        foreground: "#E8E8E8",
+        primary: "#E8E8E8",
+        secondary: "#161922", // slightly lighter than bg for panels
+        accent: "#D9FF3F", // neon lime/yellow
+        warning: "#FFB84D",
+        danger: "#FF4D4D",
+        muted: "#545864",
+        border: "#2A2D3A"
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['"IBM Plex Sans"', 'sans-serif'], // Body
+        display: ['"Space Grotesk"', 'sans-serif'], // Headings
+        mono: ['"JetBrains Mono"', 'monospace'], // Numbers/Data
       },
       boxShadow: {
-        'soft': '0 10px 40px -10px rgba(0,0,0,0.08)',
-        'floating': '0 20px 40px -20px rgba(0,0,0,0.15)',
-        'button': '0 4px 14px 0 rgba(14, 165, 233, 0.39)',
+        'none': 'none',
+      },
+      borderRadius: {
+        'sm': '2px',
+        DEFAULT: '4px',
+        'md': '6px',
+        'lg': '8px', // Never above 10px
+        'xl': '10px',
+        '2xl': '10px',
+        '3xl': '10px',
+        'full': '10px' // cap rounding
       }
     },
   },

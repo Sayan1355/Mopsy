@@ -3,27 +3,47 @@
 import React, { useState, useEffect } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
-  PieChart, Pie, Cell
+  LineChart, Line, AreaChart, Area
 } from 'recharts';
 import { 
-  Bell, Search, Zap, ArrowRight, CheckCircle2, AlertCircle, 
-  MessageCircle, TrendingUp, Users, Target, Activity,
-  ChevronRight, BarChart3, Rocket, Sparkles, Mail
+  Terminal, Activity, Crosshair, AlertTriangle, Play,
+  Command, Clock, ChevronRight, Zap, Filter
 } from 'lucide-react';
-
-const COLORS = ['#0EA5E9', '#A855F7', '#10B981', '#FBBF24', '#EF4444'];
 
 export default function Dashboard() {
   const [signals, setSignals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedLead, setSelectedLead] = useState<any>(null);
+  const [currentTime, setCurrentTime] = useState<string>("");
 
-  // Copilot State
+  // AI Panel State
   const [chatHistory, setChatHistory] = useState<{role: 'user' | 'assistant', content: string}[]>([
-    { role: 'assistant', content: 'Hi there! 👋 I\'m your friendly AI assistant. How can we grow your business today?' }
+    { role: 'assistant', content: 'SYSTEM READY. Awaiting directive.' }
   ]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
+
+  useEffect(() => {
+    // Live Clock
+    const timer = setInterval(() => {
+      const now = new Date();
+      setCurrentTime(now.toISOString().replace('T', ' ').substring(0, 19) + ' UTC');
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    fetch('http://localhost:8000/api/v1/signals')
+      .then(res => res.json())
+      .then(data => {
+        setSignals(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Fetch Error:", err);
+        setLoading(false);
+      });
+  }, []);
 
   const handleChatSubmit = async (e?: React.FormEvent, presetMsg?: string) => {
     if (e) e.preventDefault();
@@ -41,348 +61,308 @@ export default function Dashboard() {
         body: JSON.stringify({ message: msg })
       });
       const data = await res.json();
-      setChatHistory(prev => [...prev, { role: 'assistant', content: data.response || 'Oops! I couldn\'t find an answer.' }]);
+      setChatHistory(prev => [...prev, { role: 'assistant', content: data.response || 'NO_DATA' }]);
     } catch (err) {
-      setChatHistory(prev => [...prev, { role: 'assistant', content: 'Connection failed. Please try again.' }]);
+      setChatHistory(prev => [...prev, { role: 'assistant', content: 'ERR_CONNECTION' }]);
     } finally {
       setChatLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetch('http://localhost:8000/api/v1/signals')
-      .then(res => res.json())
-      .then(data => {
-        setSignals(data);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error("Fetch Error:", err);
-        setLoading(false);
-      });
-  }, []);
-
   const totalSignals = signals.length;
-  const highPriorityLeads = 12; 
-  const avgLeadScore = 84;
-  const recsGenerated = 42;
-
   const leadDistribution = [
-    { name: '0-50', count: 5 },
-    { name: '50-74', count: 15 },
-    { name: '75-89', count: 25 },
-    { name: '90-100', count: 12 },
-  ];
-
-  const intentData = [
-    { name: 'Hiring', value: 40 },
-    { name: 'Funding', value: 30 },
-    { name: 'Expansion', value: 20 },
-    { name: 'Partnership', value: 10 },
-  ];
-
-  const heatMapData = [
-    { sector: 'Healthcare', percent: '80%', color: 'bg-accent' },
-    { sector: 'AI / Tech', percent: '65%', color: 'bg-purple-500' },
-    { sector: 'Finance', percent: '40%', color: 'bg-emerald-500' },
-    { sector: 'Retail', percent: '20%', color: 'bg-yellow-400' },
+    { time: '08:00', val: 12 }, { time: '09:00', val: 24 }, { time: '10:00', val: 18 },
+    { time: '11:00', val: 42 }, { time: '12:00', val: 35 }, { time: '13:00', val: 55 }
   ];
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-accent/20 selection:text-accent pb-16">
+    <div className="min-h-screen bg-background text-foreground flex flex-col md:flex-row font-sans text-sm selection:bg-accent selection:text-background">
       
-      {/* Playful Floating Background Elements */}
-      <div className="absolute top-10 left-10 w-64 h-64 bg-accent/5 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute top-40 right-10 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl pointer-events-none"></div>
-
-      {/* Navbar */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-8 py-5 bg-white/80 backdrop-blur-xl border-b border-border">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center shadow-button">
-            <Zap size={22} className="text-white fill-white" />
-          </div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-slate-800">
-            Signal<span className="text-accent">Main</span>
-          </h1>
-        </div>
+      {/* Main Content Area */}
+      <main className="flex-1 flex flex-col min-w-0 border-r border-border">
         
-        <div className="flex items-center gap-6">
-          <div className="relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted w-4 h-4 transition-colors group-focus-within:text-accent" />
-            <input 
-              type="text" 
-              placeholder="Search companies & signals..." 
-              className="bg-secondary border-none rounded-full pl-11 pr-4 py-2.5 text-sm w-80 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:bg-white transition-all text-slate-700 placeholder:text-muted shadow-inner"
-            />
+        {/* Top Navbar / Header */}
+        <header className="h-14 border-b border-border flex items-center justify-between px-6 shrink-0 bg-background z-10 sticky top-0">
+          <div className="flex items-center gap-4">
+            <div className="w-2 h-2 rounded-full bg-accent animate-pulse"></div>
+            <h1 className="font-display font-bold text-lg tracking-tight uppercase">Signal Main</h1>
+            <div className="h-4 w-px bg-border mx-2"></div>
+            <span className="font-mono text-xs text-muted flex items-center gap-2">
+              <Clock size={12}/> {currentTime || 'LOADING CLOCK...'}
+            </span>
           </div>
-          
-          <button className="relative text-slate-400 hover:text-accent transition-colors p-2 rounded-full hover:bg-accent/10">
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-danger rounded-full border-2 border-white"></span>
-          </button>
-          
-          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-accent to-purple-500 cursor-pointer border-2 border-white shadow-md flex items-center justify-center text-white font-bold text-sm">
-            SM
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-6 pt-10 space-y-10 relative z-10">
-        
-        {/* Executive Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div>
-            <h2 className="text-4xl font-extrabold text-slate-900 tracking-tight">
-              Rapid prototyping, <br/>
-              <span className="text-slate-500">for modern sales teams.</span>
-            </h2>
-            <p className="mt-4 text-slate-500 max-w-xl text-lg leading-relaxed">
-              Signal-Main has everything you need to bring deals to life and transform how you discover opportunities with your team.
-            </p>
-          </div>
-          <div className="flex gap-3">
-            <button className="bg-white border border-border text-slate-700 px-6 py-3 rounded-full font-bold shadow-sm hover:shadow-md hover:border-slate-300 transition-all flex items-center gap-2">
-              <Mail className="w-4 h-4 text-accent" /> Export Report
-            </button>
-            <button className="bg-accent text-white px-6 py-3 rounded-full font-bold shadow-button hover:-translate-y-0.5 transition-all flex items-center gap-2">
-              <Rocket className="w-4 h-4" /> Start Campaign
-            </button>
-          </div>
-        </div>
-
-        {/* Top Row: KPIs */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white rounded-3xl p-6 shadow-soft hover:shadow-floating transition-all duration-300">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="p-3 bg-accent/10 text-accent rounded-full"><Activity size={20} /></div>
-              <p className="text-slate-500 font-semibold text-sm">Total Signals</p>
-            </div>
-            <div className="flex items-end justify-between">
-              <h3 className="text-4xl font-extrabold text-slate-800">{totalSignals || 1248}</h3>
-              <p className="text-sm text-emerald-500 font-bold mb-1">+12.5%</p>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-3xl p-6 shadow-soft hover:shadow-floating transition-all duration-300">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="p-3 bg-amber-500/10 text-amber-500 rounded-full"><AlertCircle size={20} /></div>
-              <p className="text-slate-500 font-semibold text-sm">High Priority</p>
-            </div>
-            <div className="flex items-end justify-between">
-              <h3 className="text-4xl font-extrabold text-slate-800">{highPriorityLeads}</h3>
-              <p className="text-sm text-amber-500 font-bold mb-1">Active</p>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-3xl p-6 shadow-soft hover:shadow-floating transition-all duration-300">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="p-3 bg-emerald-500/10 text-emerald-500 rounded-full"><Target size={20} /></div>
-              <p className="text-slate-500 font-semibold text-sm">Avg Score</p>
-            </div>
-            <div className="flex items-end justify-between">
-              <h3 className="text-4xl font-extrabold text-slate-800">{avgLeadScore}</h3>
-              <p className="text-sm text-emerald-500 font-bold mb-1">+2.1 pts</p>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-3xl p-6 shadow-soft hover:shadow-floating transition-all duration-300">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="p-3 bg-purple-500/10 text-purple-500 rounded-full"><Zap size={20} /></div>
-              <p className="text-slate-500 font-semibold text-sm">Actions</p>
-            </div>
-            <div className="flex items-end justify-between">
-              <h3 className="text-4xl font-extrabold text-slate-800">{recsGenerated}</h3>
-              <p className="text-sm text-slate-400 font-bold mb-1">Today</p>
-            </div>
-          </div>
-        </div>
-        
-        {/* Main Workspace Area */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
-          {/* Intelligence Queue (Takes up 2 columns) */}
-          <div className="lg:col-span-2 bg-white rounded-3xl shadow-soft overflow-hidden flex flex-col">
-            <div className="p-6 border-b border-border flex justify-between items-center">
-              <div>
-                <h3 className="text-xl font-bold text-slate-800">Workspace</h3>
-                <p className="text-sm text-slate-500 mt-1">Bring all your prospects into one single space and work together.</p>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-xs text-muted font-mono border border-border px-2 py-1 bg-secondary">
+              <SearchIcon size={12} />
+              <span>SEARCH</span>
+              <div className="flex gap-1 ml-2">
+                <span className="border border-border px-1 bg-background">⌘</span>
+                <span className="border border-border px-1 bg-background">K</span>
               </div>
-              <button className="text-sm font-bold text-accent hover:bg-accent/10 px-4 py-2 rounded-full transition-colors">
-                View All
+            </div>
+          </div>
+        </header>
+
+        <div className="p-6 md:p-10 overflow-y-auto">
+          
+          {/* SECTION 1: MISSION CONTROL */}
+          <section className="mb-14">
+            <div className="flex justify-between items-end mb-6">
+              <div>
+                <h2 className="font-display text-2xl font-bold uppercase tracking-tight text-white">Mission Control</h2>
+                <p className="text-muted mt-1">Real-time signal aggregation and threat-level assessment.</p>
+              </div>
+              <button className="font-mono text-xs border border-accent text-accent px-4 py-2 hover:bg-accent hover:text-background transition-colors flex items-center gap-2 uppercase">
+                <Play size={12} className="fill-current" /> Initialize Sweep
               </button>
             </div>
-            <div className="overflow-x-auto p-4 flex-1">
-              <div className="space-y-3">
-                {(signals.length > 0 ? signals.slice(0, 5) : [1,2,3,4]).map((sig: any, idx: number) => {
-                  const isMock = !sig.company_name;
-                  return (
-                    <div key={idx} 
-                      className={`flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-all border ${selectedLead === idx ? 'bg-accent/5 border-accent/20 shadow-sm' : 'bg-white border-transparent hover:border-border hover:shadow-sm'}`} 
-                      onClick={() => setSelectedLead(idx)}
-                    >
-                      <div className="flex items-center gap-4 w-1/3">
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-white shadow-sm ${idx === 0 ? 'bg-gradient-to-br from-amber-400 to-rose-400' : 'bg-slate-800'}`}>
-                          {isMock ? 'T' : sig.company_name.charAt(0)}
-                        </div>
-                        <div>
-                          <h4 className="font-bold text-slate-800 text-lg">{isMock ? `TechNova ${idx}` : sig.company_name}</h4>
-                          <p className="text-xs text-slate-500 font-medium">Added 12 mins ago</p>
-                        </div>
-                      </div>
-                      
-                      <div className="w-1/4">
-                        <span className="bg-secondary text-slate-600 px-3 py-1.5 rounded-full text-xs font-bold">{isMock ? 'Hiring' : sig.signal_type || 'Unknown'}</span>
-                      </div>
-                      
-                      <div className="w-1/4 flex items-center gap-3">
-                        <span className="font-extrabold text-slate-800 text-lg">{isMock ? (94 - idx*5) : 'N/A'}</span>
-                        <div className="w-20 h-2 bg-secondary rounded-full overflow-hidden">
-                          <div className={`h-full ${idx === 0 ? 'bg-amber-400' : 'bg-accent'} rounded-full`} style={{width: `${isMock ? (94 - idx*5) : 0}%`}}></div>
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <div className="w-10 h-10 rounded-full bg-white border border-border flex items-center justify-center text-slate-400 hover:text-accent hover:border-accent transition-colors shadow-sm">
-                          <ArrowRight size={18} />
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+            
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-px bg-border border border-border">
+              <div className="bg-background p-6 hover:bg-secondary transition-colors cursor-crosshair">
+                <p className="font-mono text-[10px] text-muted uppercase mb-4 flex justify-between">
+                  Signals Captured <Activity size={12} className="text-accent" />
+                </p>
+                <p className="font-mono text-4xl text-white">{totalSignals || 1248}</p>
+                <div className="mt-4 h-1 w-full bg-secondary overflow-hidden">
+                  <div className="h-full bg-accent w-3/4"></div>
+                </div>
+              </div>
+              <div className="bg-background p-6 hover:bg-secondary transition-colors cursor-crosshair">
+                <p className="font-mono text-[10px] text-muted uppercase mb-4 flex justify-between">
+                  Critical Targets <AlertTriangle size={12} className="text-danger" />
+                </p>
+                <p className="font-mono text-4xl text-danger">12</p>
+                <p className="font-mono text-[10px] text-danger mt-2">+4 Δ vs T-24H</p>
+              </div>
+              <div className="bg-background p-6 hover:bg-secondary transition-colors cursor-crosshair">
+                <p className="font-mono text-[10px] text-muted uppercase mb-4 flex justify-between">
+                  Avg Velocity <Crosshair size={12} className="text-warning" />
+                </p>
+                <p className="font-mono text-4xl text-white">84<span className="text-lg text-muted">.2</span></p>
+                <p className="font-mono text-[10px] text-warning mt-2">OPTIMAL RANGE</p>
+              </div>
+              <div className="bg-background p-6 hover:bg-secondary transition-colors cursor-crosshair">
+                <p className="font-mono text-[10px] text-muted uppercase mb-4 flex justify-between">
+                  System Load <Terminal size={12} className="text-muted" />
+                </p>
+                <p className="font-mono text-4xl text-white">24<span className="text-lg text-muted">%</span></p>
+                <div className="mt-4 flex gap-1">
+                  <div className="h-1.5 flex-1 bg-accent"></div>
+                  <div className="h-1.5 flex-1 bg-accent"></div>
+                  <div className="h-1.5 flex-1 bg-secondary"></div>
+                  <div className="h-1.5 flex-1 bg-secondary"></div>
+                  <div className="h-1.5 flex-1 bg-secondary"></div>
+                </div>
               </div>
             </div>
-          </div>
+          </section>
 
-          {/* AI Copilot Chat */}
-          <div className="bg-white rounded-3xl shadow-soft p-6 flex flex-col h-[600px] border border-border/50 relative">
-            <div className="absolute top-[-15px] left-[-15px] p-3 bg-purple-500 text-white rounded-full shadow-lg transform -rotate-12">
-              <MessageCircle size={24} className="fill-white" />
-            </div>
-
-            <div className="flex items-center justify-center mb-6 pt-2">
-              <h3 className="text-lg font-bold text-slate-800">Copilot</h3>
-            </div>
-            
-            <div className="flex-1 overflow-y-auto mb-4 space-y-5 pr-2">
-              {chatHistory.map((msg, i) => (
-                <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  {msg.role === 'assistant' && (
-                    <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-white shrink-0 mr-3 mt-1 shadow-sm">
-                      <Sparkles size={14} />
+          {/* SECTION 2: TIMELINE (Horizontal flow) */}
+          <section className="mb-14">
+            <h2 className="font-display text-base font-bold uppercase tracking-tight text-white mb-6 border-b border-border pb-2">Event Flow</h2>
+            <div className="flex items-center gap-4 overflow-x-auto pb-4 hide-scrollbar">
+              {['Signal Ingest', 'Intent Map', 'Scoring', 'Strategy Gen', 'Execution'].map((step, i) => (
+                <React.Fragment key={i}>
+                  <div className={`shrink-0 border p-3 ${i < 3 ? 'border-accent text-accent bg-accent/5' : 'border-border text-muted bg-secondary'}`}>
+                    <span className="font-mono text-[10px] block mb-1">NODE 0{i+1}</span>
+                    <span className="font-display font-bold uppercase text-xs">{step}</span>
+                  </div>
+                  {i < 4 && (
+                    <div className="shrink-0 w-8 h-px bg-border relative">
+                      <div className={`absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full ${i < 2 ? 'bg-accent' : 'bg-muted'}`}></div>
                     </div>
                   )}
-                  <div className={`px-5 py-3.5 rounded-2xl max-w-[85%] shadow-sm ${msg.role === 'user' ? 'bg-accent text-white rounded-br-none' : 'bg-secondary text-slate-700 rounded-bl-none'}`}>
-                    <p className="text-sm font-medium leading-relaxed whitespace-pre-wrap">{msg.content}</p>
-                  </div>
-                </div>
+                </React.Fragment>
               ))}
-              {chatLoading && (
-                <div className="flex justify-start">
-                  <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-white shrink-0 mr-3 mt-1 shadow-sm">
-                    <Sparkles size={14} />
-                  </div>
-                  <div className="px-5 py-4 rounded-2xl bg-secondary rounded-bl-none flex gap-1.5 items-center">
-                    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
-                    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
-                  </div>
+            </div>
+          </section>
+
+          {/* SECTION 3: ANALYTICS */}
+          <section className="mb-14">
+            <h2 className="font-display text-base font-bold uppercase tracking-tight text-white mb-6 border-b border-border pb-2">Telemetry Data</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 border border-border bg-secondary p-5">
+                <div className="flex justify-between items-center mb-6">
+                  <p className="font-mono text-[10px] uppercase text-muted">Frequency Over Time</p>
+                  <span className="font-mono text-[10px] border border-border px-1">LIVE</span>
                 </div>
-              )}
+                <div className="h-48">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={leadDistribution}>
+                      <defs>
+                        <linearGradient id="colorVal" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#D9FF3F" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="#D9FF3F" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="1 3" stroke="#2A2D3A" vertical={false} />
+                      <XAxis dataKey="time" stroke="#545864" fontSize={10} fontFamily="monospace" tickLine={false} axisLine={false} />
+                      <YAxis stroke="#545864" fontSize={10} fontFamily="monospace" tickLine={false} axisLine={false} />
+                      <RechartsTooltip cursor={{stroke: '#545864', strokeWidth: 1, strokeDasharray: '2 2'}} contentStyle={{backgroundColor: '#0B0D12', border: '1px solid #2A2D3A', borderRadius: '0', fontFamily: 'monospace', fontSize: '10px', color: '#E8E8E8'}} />
+                      <Area type="step" dataKey="val" stroke="#D9FF3F" strokeWidth={2} fillOpacity={1} fill="url(#colorVal)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+              <div className="border border-border bg-secondary p-5 flex flex-col">
+                <p className="font-mono text-[10px] uppercase text-muted mb-6">Intent Distribution Matrix</p>
+                <div className="flex-1 space-y-4 font-mono text-[10px]">
+                  {[
+                    {lbl: 'Hiring Expansion', val: '42%'},
+                    {lbl: 'Series A/B Funding', val: '28%'},
+                    {lbl: 'Executive Move', val: '18%'},
+                    {lbl: 'M&A Rumor', val: '12%'}
+                  ].map((row, i) => (
+                    <div key={i}>
+                      <div className="flex justify-between text-white mb-1">
+                        <span>{row.lbl}</span>
+                        <span className={i === 0 ? 'text-accent' : ''}>{row.val}</span>
+                      </div>
+                      <div className="w-full bg-background h-1.5 border border-border">
+                        <div className={`h-full ${i === 0 ? 'bg-accent' : 'bg-muted'}`} style={{width: row.val}}></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
+          </section>
 
-            <form onSubmit={handleChatSubmit} className="relative mt-auto">
-              <input 
-                type="text" 
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                placeholder="Type a message..." 
-                className="w-full bg-secondary border-none rounded-full pl-5 pr-14 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 transition-all text-slate-700 font-medium placeholder:text-slate-400" 
-              />
-              <button type="submit" disabled={chatLoading} className="absolute right-2 top-1/2 -translate-y-1/2 bg-accent text-white p-2 rounded-full hover:bg-blue-500 transition-colors shadow-button disabled:opacity-50">
-                <ArrowRight size={18} />
-              </button>
-            </form>
-          </div>
-        </div>
-
-        {/* Bottom Row: Charts & Strategy */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
-          <div className="glass-panel bg-white rounded-3xl p-6 shadow-soft flex flex-col">
-            <h3 className="text-lg font-bold text-slate-800 mb-6">Score Distribution</h3>
-            <div className="flex-1 min-h-[200px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={leadDistribution}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                  <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-                  <RechartsTooltip cursor={{fill: '#f8fafc'}} contentStyle={{backgroundColor: '#fff', border: 'none', borderRadius: '16px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', fontWeight: 'bold', color: '#1e293b'}} />
-                  <Bar dataKey="count" fill="#0EA5E9" radius={[8, 8, 8, 8]} barSize={40} />
-                </BarChart>
-              </ResponsiveContainer>
+          {/* SECTION 4: DENSE DATA TABLE */}
+          <section>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="font-display text-base font-bold uppercase tracking-tight text-white">Target Database</h2>
+              <div className="flex gap-2">
+                <button className="font-mono text-[10px] border border-border px-2 py-1 text-muted hover:text-white flex items-center gap-1">
+                  <Filter size={10} /> FILTER
+                </button>
+              </div>
             </div>
-          </div>
-
-          <div className="glass-panel bg-white rounded-3xl p-6 shadow-soft flex flex-col">
-            <h3 className="text-lg font-bold text-slate-800 mb-6">Intent Breakdown</h3>
-            <div className="flex-1 min-h-[200px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={intentData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={5} stroke="none" dataKey="value">
-                    {intentData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <RechartsTooltip contentStyle={{backgroundColor: '#fff', border: 'none', borderRadius: '16px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', fontWeight: 'bold', color: '#1e293b'}} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-3xl p-6 shadow-soft flex flex-col relative overflow-hidden border border-border/50">
-            <h3 className="text-lg font-bold text-slate-800 mb-6">Strategy Engine</h3>
             
-            {selectedLead !== null ? (
-              <div className="space-y-5 flex-1 flex flex-col relative z-10">
-                <div>
-                  <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-2">Next Best Action</p>
-                  <div className="bg-secondary rounded-2xl p-4">
-                    <p className="text-slate-800 font-bold">Contact the CTO within 24 hours.</p>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2">Channel</p>
-                    <p className="text-slate-800 font-bold text-sm bg-secondary rounded-xl py-2 px-3 inline-block">LinkedIn</p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2">Timeline</p>
-                    <p className="text-amber-500 font-bold text-sm bg-amber-500/10 rounded-xl py-2 px-3 inline-block">T-Minus 24h</p>
-                  </div>
-                </div>
-
-                <div className="mt-auto pt-4">
-                  <button 
-                    onClick={() => alert('Automation Sequence Initiated!')}
-                    className="w-full bg-slate-900 text-white py-4 rounded-full font-bold hover:bg-slate-800 transition-colors shadow-md flex items-center justify-center gap-2"
-                  >
-                    <Zap size={18} className="fill-white" /> Execute Sequence
-                  </button>
-                </div>
+            <div className="border border-border bg-secondary overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse font-mono text-[11px]">
+                  <thead className="bg-background border-b border-border text-muted">
+                    <tr>
+                      <th className="px-4 py-3 font-normal border-r border-border w-10 text-center">ID</th>
+                      <th className="px-4 py-3 font-normal border-r border-border">IDENTIFIER (COMPANY)</th>
+                      <th className="px-4 py-3 font-normal border-r border-border">VECTOR (INTENT)</th>
+                      <th className="px-4 py-3 font-normal border-r border-border text-right">SCORE</th>
+                      <th className="px-4 py-3 font-normal text-center w-24">STATUS</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {(signals.length > 0 ? signals.slice(0, 8) : [1,2,3,4,5]).map((sig: any, idx: number) => {
+                      const isMock = !sig.company_name;
+                      const score = isMock ? (98 - idx*4) : 'N/A';
+                      const isCrit = idx === 0;
+                      return (
+                        <tr key={idx} 
+                          className={`hover:bg-background cursor-pointer group ${selectedLead === idx ? 'bg-background' : ''}`}
+                          onClick={() => setSelectedLead(idx)}
+                        >
+                          <td className={`px-4 py-2 border-r border-border text-center ${selectedLead === idx ? 'text-accent' : 'text-muted'}`}>
+                            {idx < 9 ? `0${idx+1}` : idx+1}
+                          </td>
+                          <td className="px-4 py-2 border-r border-border text-white group-hover:text-accent font-sans text-sm font-medium">
+                            {isMock ? `TechNova Systems ${idx}` : sig.company_name}
+                          </td>
+                          <td className="px-4 py-2 border-r border-border text-muted">
+                            {isMock ? 'Hiring (Engineering)' : sig.signal_type || 'Unknown'}
+                          </td>
+                          <td className="px-4 py-2 border-r border-border text-right">
+                            <span className={isCrit ? 'text-accent' : 'text-white'}>{score}</span>
+                          </td>
+                          <td className="px-4 py-2 text-center">
+                            <span className={`px-1.5 py-0.5 border ${isCrit ? 'border-danger text-danger bg-danger/10' : 'border-border text-muted'}`}>
+                              {isCrit ? 'CRIT' : 'IDLE'}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
-            ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-center">
-                <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mb-4">
-                  <Target className="w-8 h-8 text-slate-300" />
-                </div>
-                <p className="text-slate-500 font-medium">Select a lead from the Workspace<br/>to generate a strategy.</p>
-              </div>
-            )}
-          </div>
+            </div>
+          </section>
 
         </div>
       </main>
+
+      {/* AI SIDE PANEL (Fixed Width) */}
+      <aside className="w-80 shrink-0 bg-secondary flex flex-col border-l border-border h-screen sticky top-0">
+        <div className="h-14 border-b border-border flex items-center px-4 bg-background justify-between">
+          <div className="flex items-center gap-2">
+            <Terminal size={14} className="text-accent" />
+            <span className="font-mono text-[10px] text-muted">TERMINAL // ASSISTANT</span>
+          </div>
+          <span className="font-mono text-[10px] border border-border px-1 text-muted">CTRL+`</span>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 font-mono text-[11px] leading-relaxed">
+          {chatHistory.map((msg, i) => (
+            <div key={i} className="flex flex-col gap-1">
+              <span className={`text-[9px] ${msg.role === 'user' ? 'text-white' : 'text-accent'}`}>
+                {msg.role === 'user' ? 'USER_QUERY:' : 'SYS_RESPONSE:'}
+              </span>
+              <div className={`p-3 border ${msg.role === 'user' ? 'border-border bg-background text-muted' : 'border-accent/30 bg-accent/5 text-white'}`}>
+                <p className="whitespace-pre-wrap">{msg.content}</p>
+              </div>
+            </div>
+          ))}
+          {chatLoading && (
+            <div className="flex flex-col gap-1">
+              <span className="text-[9px] text-accent">SYS_RESPONSE:</span>
+              <div className="p-3 border border-border bg-background text-muted flex gap-2 items-center">
+                <div className="w-1.5 h-1.5 bg-accent animate-ping"></div>
+                PROCESSING_QUERY...
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="p-4 border-t border-border bg-background">
+          <form onSubmit={handleChatSubmit} className="relative">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-accent font-mono text-xs">&gt;</div>
+            <input 
+              type="text" 
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              placeholder="ENTER DIRECTIVE..." 
+              className="w-full bg-secondary border border-border pl-7 pr-10 py-2.5 font-mono text-[11px] focus:outline-none focus:border-accent text-white placeholder:text-muted rounded-none" 
+            />
+            <button type="submit" disabled={chatLoading} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-accent transition-colors disabled:opacity-50">
+              <Play size={12} className="fill-current" />
+            </button>
+          </form>
+          {selectedLead !== null && (
+            <div className="mt-4 border border-border bg-secondary p-3">
+              <div className="flex justify-between items-center mb-2 border-b border-border pb-1">
+                <span className="font-mono text-[9px] text-accent uppercase">Context Locked</span>
+                <span className="font-mono text-[9px] text-muted">ID: 0{selectedLead+1}</span>
+              </div>
+              <button 
+                onClick={() => alert('Executing Workflow')}
+                className="w-full font-mono text-[10px] bg-white text-background hover:bg-accent py-2 transition-colors flex items-center justify-center gap-2 mt-2"
+              >
+                <Zap size={10} className="fill-current" /> EXECUTE WORKFLOW
+              </button>
+            </div>
+          )}
+        </div>
+      </aside>
+
     </div>
+  );
+}
+
+// Utility icon component
+function SearchIcon(props: any) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width={props.size} height={props.size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <circle cx="11" cy="11" r="8"></circle>
+      <path d="m21 21-4.3-4.3"></path>
+    </svg>
   );
 }
