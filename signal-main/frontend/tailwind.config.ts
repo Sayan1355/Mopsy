@@ -10,24 +10,28 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "#0A0A0A", // Very dark black/graphite
-        foreground: "#E5E5E5", // Stark off-white
-        primary: "#0A0A0A",
-        secondary: "#141414", // Slightly lighter for panels
-        accent: "#FF3300", // Safety Orange
-        success: "#00FF66", // Neon Green
-        warning: "#FFB300", // Construction Yellow
-        danger: "#FF0033", // Stark Red
-        muted: "#737373", // Utility Gray
-        border: "#333333" // Sharp borders
+        background: "#030712", // Very dark slate/blue
+        foreground: "#F9FAFB",
+        primary: "#111827",
+        secondary: "#1F2937",
+        accent: "#3B82F6", // Vivid blue
+        "accent-glow": "rgba(59, 130, 246, 0.5)",
+        success: "#10B981", // Emerald
+        warning: "#F59E0B", // Amber
+        danger: "#EF4444", // Rose
+        muted: "#6B7280",
+        border: "rgba(255,255,255,0.08)"
+      },
+      backgroundImage: {
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+        'hero-glow': 'conic-gradient(from 180deg at 50% 50%, #2a8af633 0deg, #a853ba33 180deg, #e92a6733 360deg)',
       },
       fontFamily: {
-        sans: ['Inter', 'Helvetica Neue', 'Arial', 'sans-serif'],
-        mono: ['Roboto Mono', 'Courier New', 'monospace'],
+        sans: ['Inter', 'Outfit', 'sans-serif'],
       },
       boxShadow: {
-        'neo': '4px 4px 0px 0px rgba(255, 51, 0, 1)', // Harsh brutalist shadow
-        'neo-sm': '2px 2px 0px 0px rgba(255, 51, 0, 1)',
+        'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+        'glow': '0 0 20px rgba(59, 130, 246, 0.5)',
       }
     },
   },
