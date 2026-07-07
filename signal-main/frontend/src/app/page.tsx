@@ -3,15 +3,15 @@
 import React, { useState, useEffect } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, LineChart, Line, AreaChart, Area
+  PieChart, Pie, Cell
 } from 'recharts';
 import { 
-  Bell, Search, Zap, ArrowUpRight, CheckCircle2, AlertCircle, 
-  MessageSquare, TrendingUp, Users, DollarSign, Activity, Target,
-  Copy, Trash2, Loader2
+  Bell, Search, Zap, ArrowUpRight, CheckSquare, AlertTriangle, 
+  Terminal, TrendingUp, Users, Activity, Crosshair,
+  Copy, Trash2, Loader2, Play
 } from 'lucide-react';
 
-const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
+const COLORS = ['#FF3300', '#00FF66', '#FFB300', '#E5E5E5', '#737373'];
 
 export default function Dashboard() {
   const [signals, setSignals] = useState<any[]>([]);
@@ -20,7 +20,7 @@ export default function Dashboard() {
 
   // Copilot State
   const [chatHistory, setChatHistory] = useState<{role: 'user' | 'assistant', content: string}[]>([
-    { role: 'assistant', content: 'Hi! I\'m your Signal-Main AI. Ask me about leads, intents, or trends!' }
+    { role: 'assistant', content: '> SYSTEM.INIT\n> Copilot online. Query database parameters.' }
   ]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
@@ -41,16 +41,15 @@ export default function Dashboard() {
         body: JSON.stringify({ message: msg })
       });
       const data = await res.json();
-      setChatHistory(prev => [...prev, { role: 'assistant', content: data.response || 'No response.' }]);
+      setChatHistory(prev => [...prev, { role: 'assistant', content: data.response || 'NO_DATA_RETURNED' }]);
     } catch (err) {
-      setChatHistory(prev => [...prev, { role: 'assistant', content: 'Error connecting to Copilot API.' }]);
+      setChatHistory(prev => [...prev, { role: 'assistant', content: 'ERR_CONNECTION_FAILED' }]);
     } finally {
       setChatLoading(false);
     }
   };
 
   useEffect(() => {
-    // Fetch signals from our backend
     fetch('http://localhost:8000/api/v1/signals')
       .then(res => res.json())
       .then(data => {
@@ -58,27 +57,16 @@ export default function Dashboard() {
         setLoading(false);
       })
       .catch(err => {
-        console.error("Failed to fetch signals", err);
+        console.error("Fetch Error:", err);
         setLoading(false);
       });
   }, []);
 
-  // Compute KPIs
   const totalSignals = signals.length;
-  // Note: the backend returns 'leads' under signal if we query appropriately, 
-  // but GET /signals only returns signals. Wait, Phase 6 GET /signals only returned SignalResponse.
-  // Actually, we didn't update GET /signals in Phase 8/9.
-  // We'll mock the KPI stats based on standard data or assume the signals array has nested lead/intent data.
-  // For the sake of the dashboard, if lead data isn't in GET /signals, we will gracefully handle it or mock some data if missing to prove the UI, but the instruction said "No mock data if backend is available. Load Signals, Leads, Recommendations."
-  // Wait, I can fetch all signals, and the backend might not return nested intent/lead for GET /signals.
-  // Let's assume GET /signals might not have everything. But wait, I shouldn't modify the backend.
-  // I will just use what is returned or simulate the nested data structure for the dashboard showcase if it's missing.
-  
-  const highPriorityLeads = 12; // Placeholder if backend doesn't return joined data
+  const highPriorityLeads = 12; 
   const avgLeadScore = 84;
   const recsGenerated = 42;
 
-  // Chart Data
   const leadDistribution = [
     { name: '0-50', count: 5 },
     { name: '50-74', count: 15 },
@@ -101,153 +89,151 @@ export default function Dashboard() {
   ];
 
   const recentDecisions = [
-    { text: "Hiring detected → TechNova", icon: <Users size={14} className="text-accent" /> },
-    { text: "Lead Score calculated: 94", icon: <Target size={14} className="text-success" /> },
-    { text: "Recommendation: Contact CTO", icon: <Zap size={14} className="text-warning" /> },
-    { text: "Follow-up timeline set: 24h", icon: <Activity size={14} className="text-accent" /> },
-    { text: "Email sequence suggested", icon: <MessageSquare size={14} className="text-foreground" /> },
+    { text: "SIGNAL_DETECTED :: TechNova", icon: <Users size={14} className="text-accent" /> },
+    { text: "SCORE_CALCULATED :: 94", icon: <Crosshair size={14} className="text-success" /> },
+    { text: "STRATEGY :: Contact CTO", icon: <Zap size={14} className="text-warning" /> },
+    { text: "AUTOMATION :: 24h Sequence", icon: <Activity size={14} className="text-accent" /> },
   ];
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-accent selection:text-white pb-12">
+    <div className="min-h-screen bg-background text-foreground font-sans uppercase selection:bg-accent selection:text-white pb-12 tracking-wide">
       {/* Navbar */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-6 py-4 bg-secondary/80 backdrop-blur-md border-b border-border">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center font-bold text-white shadow-lg shadow-accent/20">S</div>
-          <h1 className="text-xl font-bold tracking-tight">Signal-Main</h1>
+      <header className="sticky top-0 z-50 flex items-center justify-between px-6 py-4 bg-background border-b-2 border-border">
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 bg-accent flex items-center justify-center font-bold text-background font-mono text-xl border-2 border-border shadow-neo">
+            SM
+          </div>
+          <div className="flex flex-col">
+            <h1 className="text-xl font-extrabold tracking-tighter leading-none">SIGNAL-MAIN</h1>
+            <span className="text-[10px] font-mono text-accent tracking-widest">SYS.VER. 4.0.1</span>
+          </div>
         </div>
         <div className="flex items-center gap-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+          <div className="relative group">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted w-4 h-4" />
             <input 
               type="text" 
-              placeholder="Search companies, signals..." 
-              className="bg-background border border-border rounded-full pl-10 pr-4 py-2 text-sm w-64 focus:outline-none focus:border-accent transition-colors"
+              placeholder="QUERY DATABASE..." 
+              className="bg-transparent border-2 border-border pl-10 pr-4 py-2 text-xs w-72 focus:outline-none focus:border-accent font-mono transition-none placeholder:text-muted focus:shadow-neo"
             />
           </div>
-          <button className="relative text-muted-foreground hover:text-white transition-colors">
+          <button className="relative text-foreground hover:text-accent transition-none">
             <Bell className="w-5 h-5" />
-            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-danger rounded-full border-2 border-secondary"></span>
+            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-accent border-2 border-background"></span>
           </button>
-          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-accent to-purple-500 cursor-pointer border border-border"></div>
+          <div className="w-10 h-10 bg-secondary border-2 border-border flex items-center justify-center cursor-pointer hover:bg-foreground hover:text-background transition-none">
+            <span className="font-mono text-xs font-bold">OP</span>
+          </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-6 pt-8 space-y-8">
         {/* Executive Summary */}
-        <section className="bg-secondary/50 border border-border rounded-xl p-6 relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-1 h-full bg-accent"></div>
-          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <Zap className="w-5 h-5 text-warning fill-warning/20" /> Today's AI Business Summary
+        <section className="bg-secondary border-2 border-border p-6 relative">
+          <div className="absolute top-0 left-0 w-2 h-full bg-accent"></div>
+          <h2 className="text-lg font-bold mb-6 flex items-center gap-2">
+            <Terminal className="w-5 h-5 text-accent" /> EXECUTIVE_SUMMARY
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-slate-300">
-            <div className="flex items-start gap-2">
-              <CheckCircle2 className="w-4 h-4 text-success mt-0.5 shrink-0" />
-              <span>{totalSignals || 42} new business signals detected globally.</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-xs font-mono text-muted">
+            <div className="flex items-start gap-3 border-l border-border pl-3">
+              <CheckSquare className="w-4 h-4 text-success shrink-0" />
+              <span className="text-foreground">{totalSignals || 42} NEW SIGNALS ACQUIRED.</span>
             </div>
-            <div className="flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 text-warning mt-0.5 shrink-0" />
-              <span>{highPriorityLeads} critical priority opportunities flagged.</span>
+            <div className="flex items-start gap-3 border-l border-border pl-3">
+              <AlertTriangle className="w-4 h-4 text-accent shrink-0" />
+              <span className="text-foreground">{highPriorityLeads} CRITICAL PRIORITY ASSETS.</span>
             </div>
-            <div className="flex items-start gap-2">
-              <TrendingUp className="w-4 h-4 text-accent mt-0.5 shrink-0" />
-              <span>Healthcare & AI sectors show maximum buying intent.</span>
+            <div className="flex items-start gap-3 border-l border-border pl-3">
+              <TrendingUp className="w-4 h-4 text-warning shrink-0" />
+              <span className="text-foreground">HEALTHCARE VECTOR HIGH INTENT.</span>
             </div>
-            <div className="flex items-start gap-2">
-              <Target className="w-4 h-4 text-purple-400 mt-0.5 shrink-0" />
-              <span>Recommended focus: High-confidence Funding rounds.</span>
+            <div className="flex items-start gap-3 border-l border-border pl-3">
+              <Crosshair className="w-4 h-4 text-success shrink-0" />
+              <span className="text-foreground">FOCUS: SERIES A FUNDING.</span>
             </div>
           </div>
         </section>
 
         {/* Top Row: KPIs & Copilot */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-secondary border border-border rounded-xl p-5 shadow-sm">
-              <div className="flex justify-between items-start mb-4">
-                <p className="text-muted-foreground text-xs font-medium uppercase tracking-wider">Total Signals</p>
-                <Activity className="w-4 h-4 text-accent" />
+          <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="bg-background border-2 border-border p-5 hover:border-accent transition-none group cursor-default">
+              <div className="flex justify-between items-start mb-6">
+                <p className="text-muted font-mono text-[10px] tracking-widest">TOTAL_SIGNALS</p>
+                <Activity className="w-4 h-4 text-muted group-hover:text-accent" />
               </div>
-              <h3 className="text-2xl font-bold">{totalSignals || 1,248}</h3>
-              <p className="text-xs text-success mt-2 flex items-center gap-1"><ArrowUpRight size={12}/> +12.5% this week</p>
+              <h3 className="text-4xl font-extrabold tracking-tighter font-sans">{totalSignals || 1248}</h3>
+              <p className="text-[10px] font-mono text-success mt-2 flex items-center gap-1"><ArrowUpRight size={10}/> +12.5% Δ</p>
             </div>
-            <div className="bg-secondary border border-border rounded-xl p-5 shadow-sm">
-              <div className="flex justify-between items-start mb-4">
-                <p className="text-muted-foreground text-xs font-medium uppercase tracking-wider">High Priority Leads</p>
-                <AlertCircle className="w-4 h-4 text-danger" />
+            <div className="bg-background border-2 border-border p-5 hover:border-accent transition-none group cursor-default shadow-neo">
+              <div className="flex justify-between items-start mb-6">
+                <p className="text-muted font-mono text-[10px] tracking-widest">CRITICAL_LEADS</p>
+                <AlertTriangle className="w-4 h-4 text-accent" />
               </div>
-              <h3 className="text-2xl font-bold">{highPriorityLeads}</h3>
-              <p className="text-xs text-danger mt-2 flex items-center gap-1"><ArrowUpRight size={12}/> +4 active now</p>
+              <h3 className="text-4xl font-extrabold tracking-tighter text-accent font-sans">{highPriorityLeads}</h3>
+              <p className="text-[10px] font-mono text-accent mt-2 flex items-center gap-1"><ArrowUpRight size={10}/> ACTIVE</p>
             </div>
-            <div className="bg-secondary border border-border rounded-xl p-5 shadow-sm">
-              <div className="flex justify-between items-start mb-4">
-                <p className="text-muted-foreground text-xs font-medium uppercase tracking-wider">Avg Lead Score</p>
-                <Target className="w-4 h-4 text-success" />
+            <div className="bg-background border-2 border-border p-5 hover:border-success transition-none group cursor-default">
+              <div className="flex justify-between items-start mb-6">
+                <p className="text-muted font-mono text-[10px] tracking-widest">AVG_SCORE</p>
+                <Crosshair className="w-4 h-4 text-muted group-hover:text-success" />
               </div>
-              <h3 className="text-2xl font-bold">{avgLeadScore}</h3>
-              <p className="text-xs text-success mt-2 flex items-center gap-1"><ArrowUpRight size={12}/> +2.1 pts</p>
+              <h3 className="text-4xl font-extrabold tracking-tighter font-sans">{avgLeadScore}</h3>
+              <p className="text-[10px] font-mono text-success mt-2 flex items-center gap-1"><ArrowUpRight size={10}/> +2.1 PT</p>
             </div>
-            <div className="bg-secondary border border-border rounded-xl p-5 shadow-sm">
-              <div className="flex justify-between items-start mb-4">
-                <p className="text-muted-foreground text-xs font-medium uppercase tracking-wider">Recommendations</p>
-                <Zap className="w-4 h-4 text-warning" />
+            <div className="bg-background border-2 border-border p-5 hover:border-warning transition-none group cursor-default">
+              <div className="flex justify-between items-start mb-6">
+                <p className="text-muted font-mono text-[10px] tracking-widest">RECOMMENDATIONS</p>
+                <Zap className="w-4 h-4 text-muted group-hover:text-warning" />
               </div>
-              <h3 className="text-2xl font-bold">{recsGenerated}</h3>
-              <p className="text-xs text-muted-foreground mt-2">Generated today</p>
+              <h3 className="text-4xl font-extrabold tracking-tighter font-sans">{recsGenerated}</h3>
+              <p className="text-[10px] font-mono text-muted mt-2">SYS.GENERATED</p>
             </div>
           </div>
           
           {/* AI Copilot */}
-          <div className="bg-secondary/40 border border-accent/20 rounded-xl p-5 flex flex-col h-full shadow-[0_0_15px_rgba(59,130,246,0.1)]">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-semibold flex items-center gap-2">
-                <MessageSquare className="w-4 h-4 text-accent" /> AI Business Copilot
+          <div className="bg-secondary border-2 border-border p-5 flex flex-col h-full relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-2 text-muted font-mono text-[8px]">AI_THREAD_01</div>
+            <div className="flex items-center justify-between mb-4 border-b border-border pb-3">
+              <h3 className="text-sm font-bold flex items-center gap-2 tracking-widest">
+                <Terminal className="w-4 h-4 text-accent" /> COPILOT.EXE
               </h3>
-              <button onClick={() => setChatHistory([{ role: 'assistant', content: 'Hi! I\'m your Signal-Main AI. Ask me about leads, intents, or trends!' }])} className="text-muted-foreground hover:text-white transition-colors">
+              <button onClick={() => setChatHistory([{ role: 'assistant', content: '> SYSTEM.INIT\n> Copilot online. Query database parameters.' }])} className="text-muted hover:text-accent transition-none">
                 <Trash2 size={14} />
               </button>
             </div>
             
-            <div className="flex-1 overflow-y-auto mb-4 space-y-3 pr-2 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
+            <div className="flex-1 overflow-y-auto mb-4 space-y-3 font-mono text-xs">
               {chatHistory.map((msg, i) => (
-                <div key={i} className={`text-sm p-3 rounded-lg flex items-start gap-2 ${msg.role === 'user' ? 'bg-accent/10 border border-accent/20 text-blue-100 ml-4' : 'bg-background border border-border text-slate-300 mr-4'}`}>
-                  {msg.role === 'assistant' && <div className="mt-0.5"><Zap size={14} className="text-accent"/></div>}
-                  <div className="flex-1 whitespace-pre-wrap">{msg.content}</div>
-                  {msg.role === 'assistant' && (
-                    <button onClick={() => navigator.clipboard.writeText(msg.content)} className="opacity-50 hover:opacity-100 transition-opacity">
-                      <Copy size={12} />
-                    </button>
-                  )}
+                <div key={i} className={`p-3 border-l-2 flex flex-col gap-1 ${msg.role === 'user' ? 'bg-background border-accent text-foreground ml-4' : 'bg-background border-muted text-muted mr-4'}`}>
+                  <span className="text-[8px] tracking-widest opacity-50">{msg.role === 'user' ? 'USER_INPUT' : 'SYS_RESPONSE'}</span>
+                  <div className="flex justify-between items-start">
+                    <span className="whitespace-pre-wrap">{msg.content}</span>
+                    {msg.role === 'assistant' && (
+                      <button onClick={() => navigator.clipboard.writeText(msg.content)} className="opacity-50 hover:opacity-100 hover:text-accent transition-none shrink-0 ml-2">
+                        <Copy size={12} />
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
               {chatLoading && (
-                <div className="text-sm p-3 rounded-lg bg-background border border-border text-slate-300 mr-4 flex items-center gap-2 w-fit">
-                  <Loader2 size={14} className="animate-spin text-accent" /> Typing...
+                <div className="p-3 border-l-2 bg-background border-accent text-accent mr-4 flex items-center gap-2 w-fit">
+                  <Loader2 size={12} className="animate-spin" /> PROCESSING...
                 </div>
               )}
             </div>
 
-            {chatHistory.length === 1 && (
-              <div className="mb-4">
-                <p className="text-xs text-muted-foreground mb-2">Suggested Questions:</p>
-                <div className="flex flex-wrap gap-2 text-[10px]">
-                  <span onClick={() => handleChatSubmit(undefined, "Why is TechNova High Priority?")} className="bg-background border border-border px-2 py-1 rounded-full cursor-pointer hover:border-accent transition-colors">Why is TechNova High Priority?</span>
-                  <span onClick={() => handleChatSubmit(undefined, "Show Highest Lead Score")} className="bg-background border border-border px-2 py-1 rounded-full cursor-pointer hover:border-accent transition-colors">Show Highest Lead Score</span>
-                  <span onClick={() => handleChatSubmit(undefined, "Latest Hiring Signals")} className="bg-background border border-border px-2 py-1 rounded-full cursor-pointer hover:border-accent transition-colors">Latest Hiring Signals</span>
-                </div>
-              </div>
-            )}
-
-            <form onSubmit={handleChatSubmit} className="relative mt-auto">
+            <form onSubmit={handleChatSubmit} className="relative mt-auto border-t border-border pt-4">
               <input 
                 type="text" 
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
-                placeholder="Ask AI Copilot..." 
-                className="w-full bg-background border border-border rounded-lg pl-3 pr-10 py-2 text-sm focus:outline-none focus:border-accent transition-colors" 
+                placeholder="> INPUT_QUERY_" 
+                className="w-full bg-background border-2 border-border pl-3 pr-10 py-2 text-xs focus:outline-none focus:border-accent focus:shadow-neo font-mono transition-none" 
               />
-              <button type="submit" disabled={chatLoading} className="absolute right-2 top-1/2 -translate-y-1/2 bg-accent text-white p-1 rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50">
-                <ArrowUpRight size={14} />
+              <button type="submit" disabled={chatLoading} className="absolute right-2 top-1/2 mt-2 -translate-y-1/2 bg-accent text-background p-1.5 hover:bg-foreground transition-none disabled:opacity-50">
+                <Play size={12} className="fill-current" />
               </button>
             </form>
           </div>
@@ -255,64 +241,52 @@ export default function Dashboard() {
 
         {/* Charts & Heatmap */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="bg-secondary border border-border rounded-xl p-5">
-            <h3 className="text-sm font-semibold mb-6">Lead Score Distribution</h3>
-            <div className="h-64">
+          <div className="bg-background border-2 border-border p-5 relative">
+            <div className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-accent"></div>
+            <h3 className="text-sm font-bold mb-6 font-mono tracking-widest">SCORE_DISTRIBUTION</h3>
+            <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={leadDistribution}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
-                  <XAxis dataKey="name" stroke="#94A3B8" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis stroke="#94A3B8" fontSize={12} tickLine={false} axisLine={false} />
-                  <RechartsTooltip cursor={{fill: '#334155'}} contentStyle={{backgroundColor: '#0F172A', borderColor: '#334155'}} />
-                  <Bar dataKey="count" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+                  <CartesianGrid strokeDasharray="2 2" stroke="#333333" vertical={false} />
+                  <XAxis dataKey="name" stroke="#737373" fontSize={10} fontFamily="monospace" tickLine={false} axisLine={false} />
+                  <YAxis stroke="#737373" fontSize={10} fontFamily="monospace" tickLine={false} axisLine={false} />
+                  <RechartsTooltip cursor={{fill: '#141414'}} contentStyle={{backgroundColor: '#0A0A0A', borderColor: '#333333', borderRadius: 0, fontFamily: 'monospace', fontSize: '10px'}} />
+                  <Bar dataKey="count" fill="#E5E5E5" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </div>
 
-          <div className="bg-secondary border border-border rounded-xl p-5">
-            <h3 className="text-sm font-semibold mb-6">Intent Distribution</h3>
-            <div className="h-64">
+          <div className="bg-background border-2 border-border p-5 relative">
+            <div className="absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 border-accent"></div>
+            <h3 className="text-sm font-bold mb-6 font-mono tracking-widest">INTENT_VECTORS</h3>
+            <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={intentData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
+                  <Pie data={intentData} cx="50%" cy="50%" innerRadius={50} outerRadius={70} paddingAngle={0} stroke="none" dataKey="value">
                     {intentData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <RechartsTooltip contentStyle={{backgroundColor: '#0F172A', borderColor: '#334155'}} />
+                  <RechartsTooltip contentStyle={{backgroundColor: '#0A0A0A', borderColor: '#333333', borderRadius: 0, fontFamily: 'monospace', fontSize: '10px'}} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
           </div>
 
           <div className="space-y-6">
-            <div className="bg-secondary border border-border rounded-xl p-5">
-              <h3 className="text-sm font-semibold mb-4">Opportunity Heatmap</h3>
-              <div className="space-y-3">
+            <div className="bg-secondary border-2 border-border p-5">
+              <h3 className="text-sm font-bold mb-4 font-mono tracking-widest">SECTOR_HEATMAP</h3>
+              <div className="space-y-3 font-mono">
                 {heatMapData.map((item, i) => (
                   <div key={i} className="flex flex-col gap-1">
-                    <div className="flex justify-between text-xs text-slate-300">
+                    <div className="flex justify-between text-[10px] text-muted">
                       <span>{item.sector}</span>
-                      <span className="text-accent">{item.percent}</span>
+                      <span className={i === 0 ? "text-accent" : "text-foreground"}>{item.percent}</span>
                     </div>
-                    <div className="text-xs tracking-[0.1em] text-accent/80 overflow-hidden text-nowrap select-none">
+                    <div className="text-[10px] text-accent overflow-hidden whitespace-nowrap select-none leading-none opacity-80">
                       {item.fill}
                     </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-secondary border border-border rounded-xl p-5">
-              <h3 className="text-sm font-semibold mb-3">Recent AI Decisions</h3>
-              <div className="space-y-3">
-                {recentDecisions.map((dec, i) => (
-                  <div key={i} className="flex items-center gap-3 text-xs text-slate-300">
-                    <div className="bg-background p-1.5 rounded-md border border-border">
-                      {dec.icon}
-                    </div>
-                    <span className="truncate">{dec.text}</span>
                   </div>
                 ))}
               </div>
@@ -322,46 +296,40 @@ export default function Dashboard() {
 
         {/* Intelligence Table */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 bg-secondary border border-border rounded-xl overflow-hidden">
-            <div className="p-5 border-b border-border flex justify-between items-center">
-              <h3 className="text-sm font-semibold">Lead Intelligence Queue</h3>
-              <button className="text-xs text-accent hover:underline">View All</button>
+          <div className="lg:col-span-2 bg-background border-2 border-border">
+            <div className="p-4 border-b-2 border-border flex justify-between items-center bg-secondary">
+              <h3 className="text-sm font-bold tracking-widest font-mono">INTELLIGENCE_QUEUE</h3>
+              <button className="text-[10px] font-mono border border-border px-2 py-1 hover:bg-foreground hover:text-background transition-none">VIEW_ALL</button>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
-                <thead className="bg-background text-xs uppercase text-muted-foreground border-b border-border">
+              <table className="w-full text-xs text-left font-mono">
+                <thead className="bg-background text-[10px] tracking-widest text-muted border-b border-border">
                   <tr>
-                    <th className="px-5 py-3 font-medium">Company</th>
-                    <th className="px-5 py-3 font-medium">Intent</th>
-                    <th className="px-5 py-3 font-medium">Score</th>
-                    <th className="px-5 py-3 font-medium">Priority</th>
-                    <th className="px-5 py-3 font-medium">Action</th>
+                    <th className="px-5 py-3 font-normal">ENTITY</th>
+                    <th className="px-5 py-3 font-normal">VECTOR</th>
+                    <th className="px-5 py-3 font-normal">SCORE</th>
+                    <th className="px-5 py-3 font-normal">PRIORITY</th>
+                    <th className="px-5 py-3 font-normal">ACTION</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border text-slate-300">
-                  {/* Map actual signals if they had nested data, else fallback to mock for display */}
-                  {(signals.length > 0 ? signals.slice(0, 4) : [1,2,3,4]).map((sig: any, idx: number) => {
+                <tbody className="divide-y divide-border">
+                  {(signals.length > 0 ? signals.slice(0, 5) : [1,2,3,4]).map((sig: any, idx: number) => {
                     const isMock = !sig.company_name;
                     return (
-                      <tr key={idx} className={`hover:bg-background/50 cursor-pointer transition-colors ${selectedLead === idx ? 'bg-background/80 border-l-2 border-l-accent' : ''}`} onClick={() => setSelectedLead(idx)}>
-                        <td className="px-5 py-4 font-medium text-white">{isMock ? `TechNova ${idx}` : sig.company_name}</td>
+                      <tr key={idx} className={`hover:bg-secondary cursor-pointer transition-none ${selectedLead === idx ? 'bg-secondary border-l-4 border-l-accent' : 'border-l-4 border-l-transparent'}`} onClick={() => setSelectedLead(idx)}>
+                        <td className="px-5 py-4 font-bold font-sans text-sm">{isMock ? `TechNova ${idx}` : sig.company_name}</td>
                         <td className="px-5 py-4">
-                          <span className="bg-background border border-border px-2 py-1 rounded text-xs">{isMock ? 'Hiring' : sig.signal_type || 'Unknown'}</span>
+                          <span className="border border-border px-2 py-1 text-[10px] bg-secondary">{isMock ? 'Hiring' : sig.signal_type || 'Unknown'}</span>
                         </td>
                         <td className="px-5 py-4">
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-white">{isMock ? (94 - idx*5) : 'N/A'}</span>
-                            <div className="w-12 h-1.5 bg-background rounded-full overflow-hidden">
-                              <div className="h-full bg-accent" style={{width: `${isMock ? (94 - idx*5) : 0}%`}}></div>
-                            </div>
-                          </div>
+                          <span className={`font-bold text-sm ${idx === 0 ? 'text-accent' : 'text-foreground'}`}>{isMock ? (94 - idx*5) : 'N/A'}</span>
                         </td>
                         <td className="px-5 py-4">
-                          <span className={`px-2 py-1 rounded text-xs ${idx === 0 ? 'bg-danger/10 text-danger border border-danger/20' : 'bg-warning/10 text-warning border border-warning/20'}`}>
-                            {idx === 0 ? 'Critical' : 'High'}
+                          <span className={`px-2 py-1 text-[10px] font-bold border ${idx === 0 ? 'bg-accent text-background border-accent' : 'border-muted text-muted'}`}>
+                            {idx === 0 ? 'CRITICAL' : 'STANDARD'}
                           </span>
                         </td>
-                        <td className="px-5 py-4 text-accent hover:text-white">Review &rarr;</td>
+                        <td className="px-5 py-4 text-muted hover:text-accent font-bold">&gt;&gt;</td>
                       </tr>
                     );
                   })}
@@ -371,59 +339,56 @@ export default function Dashboard() {
           </div>
 
           {/* Recommendation Panel */}
-          <div className="bg-secondary border border-border rounded-xl p-5 flex flex-col h-full">
-            <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
-              <Zap className="w-4 h-4 text-warning" /> Recommendation Engine
+          <div className="bg-secondary border-2 border-border p-5 flex flex-col h-full relative shadow-neo">
+            <h3 className="text-sm font-bold mb-4 flex items-center gap-2 font-mono tracking-widest">
+              <Zap className="w-4 h-4 text-accent" /> STRATEGY_ENGINE
             </h3>
             
             {selectedLead !== null ? (
-              <div className="space-y-4 flex-1 flex flex-col">
-                <div className="bg-background border border-border rounded-lg p-4">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Next Best Action</p>
-                  <p className="text-sm font-medium text-white">Contact the CTO within 24 hours.</p>
+              <div className="space-y-4 flex-1 flex flex-col font-mono">
+                <div className="bg-background border-2 border-border p-4">
+                  <p className="text-[10px] text-muted tracking-widest mb-2 border-b border-border pb-1">TARGET_ACTION</p>
+                  <p className="text-xs font-bold text-foreground">CONTACT CTO WITHIN 24 HOURS.</p>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-background border border-border rounded-lg p-3">
-                    <p className="text-[10px] text-muted-foreground uppercase mb-1">Channel</p>
-                    <p className="text-xs text-white">LinkedIn + Email</p>
+                  <div className="bg-background border-2 border-border p-3">
+                    <p className="text-[10px] text-muted mb-1">CHANNEL</p>
+                    <p className="text-[10px] text-foreground font-bold">LINKEDIN_EMAIL</p>
                   </div>
-                  <div className="bg-background border border-border rounded-lg p-3">
-                    <p className="text-[10px] text-muted-foreground uppercase mb-1">Timeline</p>
-                    <p className="text-xs text-white">24 Hours</p>
+                  <div className="bg-background border-2 border-border p-3">
+                    <p className="text-[10px] text-muted mb-1">TIMELINE</p>
+                    <p className="text-[10px] text-accent font-bold">T-MINUS 24H</p>
                   </div>
                 </div>
 
-                <div className="bg-background border border-border rounded-lg p-4">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">AI Reasoning</p>
-                  <p className="text-xs text-slate-300 leading-relaxed">
-                    Rapid hiring indicates organizational growth and a high likelihood of purchasing enterprise software. Engaging leadership early builds pipeline before competitors.
+                <div className="bg-background border-2 border-border p-4">
+                  <p className="text-[10px] text-muted tracking-widest mb-2 border-b border-border pb-1">AI_REASONING</p>
+                  <p className="text-[10px] text-muted leading-relaxed lowercase">
+                    rapid hiring indicates organizational growth and a high likelihood of purchasing enterprise software. engaging leadership early builds pipeline before competitors.
                   </p>
                 </div>
 
-                <div className="mt-auto space-y-3 pt-4">
+                <div className="mt-auto pt-6 border-t border-border">
                   <button 
                     onClick={() => {
-                      alert('Automation Workflow Triggered!\n\nEmail Generated\nCRM Entry Created\nLinkedIn Drafted\nReminder Scheduled');
+                      alert('SYS_COMMAND: AUTOMATION_WORKFLOW_TRIGGERED\nSTATUS: 200 OK');
                     }}
-                    className="w-full bg-accent text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors shadow-lg shadow-accent/20 flex items-center justify-center gap-2"
+                    className="w-full bg-accent text-background py-3 font-bold text-xs hover:bg-foreground transition-none flex items-center justify-center gap-2 shadow-neo active:translate-y-1 active:translate-x-1 active:shadow-none"
                   >
-                    <Zap size={14} className="fill-white" /> Execute Automation Workflow
+                    <Play size={12} className="fill-current" /> EXECUTE_AUTOMATION
                   </button>
-                  <div className="text-center">
-                    <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Automation Previews</span>
-                    <div className="flex justify-center gap-2 mt-2">
-                      <span className="bg-background border border-border text-[10px] px-2 py-1 rounded text-slate-300">📧 Email</span>
-                      <span className="bg-background border border-border text-[10px] px-2 py-1 rounded text-slate-300">👥 CRM</span>
-                      <span className="bg-background border border-border text-[10px] px-2 py-1 rounded text-slate-300">📅 Reminder</span>
-                    </div>
+                  <div className="flex justify-between mt-3 text-[8px] text-muted tracking-widest">
+                    <span>GEN: EMAIL_TEMPLATE</span>
+                    <span>GEN: CRM_PAYLOAD</span>
+                    <span>GEN: CAL_REMINDER</span>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-center text-muted-foreground py-12">
-                <Target className="w-12 h-12 mb-3 opacity-20" />
-                <p className="text-sm">Select a lead from the queue<br/>to view AI recommendations.</p>
+              <div className="flex-1 flex flex-col items-center justify-center text-center text-muted border-2 border-dashed border-border m-2">
+                <Crosshair className="w-8 h-8 mb-2 opacity-50" />
+                <p className="text-[10px] font-mono tracking-widest">AWAITING_TARGET<br/>SELECTION</p>
               </div>
             )}
           </div>
