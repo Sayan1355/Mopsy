@@ -13,6 +13,7 @@ import {
 export default function Dashboard() {
   const [signals, setSignals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<any>(null);
   const [selectedLead, setSelectedLead] = useState<any>(null);
   const [currentTime, setCurrentTime] = useState<string>("");
 
@@ -33,10 +34,10 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    fetch('http://localhost:8000/api/v1/signals')
+    fetch('http://localhost:8000/api/v1/dashboard/stats')
       .then(res => res.json())
       .then(data => {
-        setSignals(data);
+        setStats(data);
         setLoading(false);
       })
       .catch(err => {
@@ -69,11 +70,17 @@ export default function Dashboard() {
     }
   };
 
-  const totalSignals = signals.length;
-  const leadDistribution = [
-    { time: '08:00', val: 12 }, { time: '09:00', val: 24 }, { time: '10:00', val: 18 },
-    { time: '11:00', val: 42 }, { time: '12:00', val: 35 }, { time: '13:00', val: 55 }
+  const totalSignals = stats?.total_signals || 0;
+  const highPriorityLeads = stats?.high_priority_leads || 0;
+  const avgLeadScore = stats?.avg_lead_score || 0;
+  const intentData = stats?.intent_distribution || [];
+  
+  // Real dynamic lead distribution from backend instead of mocked
+  const leadDistribution = stats?.lead_distribution || [
+    { name: '0-50', count: 0 }, { name: '50-74', count: 0 }, { name: '75-89', count: 0 }, { name: '90-100', count: 0 }
   ];
+  
+  const tableData = stats?.table_data || [];
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col md:flex-row font-sans text-sm selection:bg-accent selection:text-background">
@@ -122,7 +129,7 @@ export default function Dashboard() {
                 <p className="font-mono text-[10px] text-muted uppercase mb-4 flex justify-between">
                   Signals Captured <Activity size={12} className="text-accent" />
                 </p>
-                <p className="font-mono text-4xl text-white">{totalSignals || 1248}</p>
+                <p className="font-mono text-4xl text-white">{totalSignals}</p>
                 <div className="mt-4 h-1 w-full bg-secondary overflow-hidden">
                   <div className="h-full bg-accent w-3/4"></div>
                 </div>
@@ -131,15 +138,15 @@ export default function Dashboard() {
                 <p className="font-mono text-[10px] text-muted uppercase mb-4 flex justify-between">
                   Critical Targets <AlertTriangle size={12} className="text-danger" />
                 </p>
-                <p className="font-mono text-4xl text-danger">12</p>
-                <p className="font-mono text-[10px] text-danger mt-2">+4 Δ vs T-24H</p>
+                <p className="font-mono text-4xl text-danger">{highPriorityLeads}</p>
+                <p className="font-mono text-[10px] text-danger mt-2">ACTIVE</p>
               </div>
               <div className="bg-background p-6 hover:bg-secondary transition-colors cursor-crosshair">
                 <p className="font-mono text-[10px] text-muted uppercase mb-4 flex justify-between">
                   Avg Velocity <Crosshair size={12} className="text-warning" />
                 </p>
-                <p className="font-mono text-4xl text-white">84<span className="text-lg text-muted">.2</span></p>
-                <p className="font-mono text-[10px] text-warning mt-2">OPTIMAL RANGE</p>
+                <p className="font-mono text-4xl text-white">{avgLeadScore}</p>
+                <p className="font-mono text-[10px] text-warning mt-2">AVERAGE TARGET SCORE</p>
               </div>
               <div className="bg-background p-6 hover:bg-secondary transition-colors cursor-crosshair">
                 <p className="font-mono text-[10px] text-muted uppercase mb-4 flex justify-between">
@@ -196,10 +203,10 @@ export default function Dashboard() {
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="1 3" stroke="#2A2D3A" vertical={false} />
-                      <XAxis dataKey="time" stroke="#545864" fontSize={10} fontFamily="monospace" tickLine={false} axisLine={false} />
+                      <XAxis dataKey="name" stroke="#545864" fontSize={10} fontFamily="monospace" tickLine={false} axisLine={false} />
                       <YAxis stroke="#545864" fontSize={10} fontFamily="monospace" tickLine={false} axisLine={false} />
                       <RechartsTooltip cursor={{stroke: '#545864', strokeWidth: 1, strokeDasharray: '2 2'}} contentStyle={{backgroundColor: '#0B0D12', border: '1px solid #2A2D3A', borderRadius: '0', fontFamily: 'monospace', fontSize: '10px', color: '#E8E8E8'}} />
-                      <Area type="step" dataKey="val" stroke="#D9FF3F" strokeWidth={2} fillOpacity={1} fill="url(#colorVal)" />
+                      <Area type="step" dataKey="count" stroke="#D9FF3F" strokeWidth={2} fillOpacity={1} fill="url(#colorVal)" />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
@@ -207,16 +214,11 @@ export default function Dashboard() {
               <div className="border border-border bg-secondary p-5 flex flex-col">
                 <p className="font-mono text-[10px] uppercase text-muted mb-6">Intent Distribution Matrix</p>
                 <div className="flex-1 space-y-4 font-mono text-[10px]">
-                  {[
-                    {lbl: 'Hiring Expansion', val: '42%'},
-                    {lbl: 'Series A/B Funding', val: '28%'},
-                    {lbl: 'Executive Move', val: '18%'},
-                    {lbl: 'M&A Rumor', val: '12%'}
-                  ].map((row, i) => (
+                  {intentData.map((row: any, i: number) => (
                     <div key={i}>
                       <div className="flex justify-between text-white mb-1">
-                        <span>{row.lbl}</span>
-                        <span className={i === 0 ? 'text-accent' : ''}>{row.val}</span>
+                        <span>{row.name}</span>
+                        <span className={i === 0 ? 'text-accent' : ''}>{row.value}</span>
                       </div>
                       <div className="w-full bg-background h-1.5 border border-border">
                         <div className={`h-full ${i === 0 ? 'bg-accent' : 'bg-muted'}`} style={{width: row.val}}></div>
@@ -252,26 +254,24 @@ export default function Dashboard() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
-                    {(signals.length > 0 ? signals.slice(0, 8) : [1,2,3,4,5]).map((sig: any, idx: number) => {
-                      const isMock = !sig.company_name;
-                      const score = isMock ? (98 - idx*4) : 'N/A';
-                      const isCrit = idx === 0;
+                    {tableData.map((sig: any, idx: number) => {
+                      const isCrit = sig.priority === 'HIGH' || sig.priority === 'CRITICAL';
                       return (
                         <tr key={idx} 
                           className={`hover:bg-background cursor-pointer group ${selectedLead === idx ? 'bg-background' : ''}`}
                           onClick={() => setSelectedLead(idx)}
                         >
                           <td className={`px-4 py-2 border-r border-border text-center ${selectedLead === idx ? 'text-accent' : 'text-muted'}`}>
-                            {idx < 9 ? `0${idx+1}` : idx+1}
+                            {sig.id < 10 ? `0${sig.id}` : sig.id}
                           </td>
                           <td className="px-4 py-2 border-r border-border text-white group-hover:text-accent font-sans text-sm font-medium">
-                            {isMock ? `TechNova Systems ${idx}` : sig.company_name}
+                            {sig.company_name}
                           </td>
                           <td className="px-4 py-2 border-r border-border text-muted">
-                            {isMock ? 'Hiring (Engineering)' : sig.signal_type || 'Unknown'}
+                            {sig.intent}
                           </td>
                           <td className="px-4 py-2 border-r border-border text-right">
-                            <span className={isCrit ? 'text-accent' : 'text-white'}>{score}</span>
+                            <span className={isCrit ? 'text-accent' : 'text-white'}>{sig.lead_score}</span>
                           </td>
                           <td className="px-4 py-2 text-center">
                             <span className={`px-1.5 py-0.5 border ${isCrit ? 'border-danger text-danger bg-danger/10' : 'border-border text-muted'}`}>
