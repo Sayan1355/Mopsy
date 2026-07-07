@@ -1,139 +1,111 @@
 # Signal-Main 🚀
 
-> **Hackathon Project** — A real-time signals harvesting and lead intelligence engine.
+**Signal-Main** is a production-ready AI-powered B2B Sales Intelligence Platform. It autonomously ingests raw business signals from across the internet, leverages cascaded Multi-Agent AI (OpenAI GPT) to predict buyer intent, scores leads, recommends actionable sales strategies, and drafts automated outreach—all delivered inside a stunning Enterprise Dashboard.
 
----
+## 🌟 Project Overview
+This platform transforms unstructured data noise into high-value sales pipelines instantly. Using a strict multi-agent architecture with bulletproof fallback redundancy, it scales perfectly from Hackathons to Enterprise Production.
 
-## 📌 Project Name
+## 🏗️ Architecture
 
-**Signal-Main** — Signals Harvesting Engine
-
----
-
-## 📖 Overview
-
-Signal-Main is an end-to-end pipeline that continuously harvests intent signals from the
-open web (job postings, press releases, social content, funding announcements), classifies
-them with AI, scores the resulting leads by priority, and surfaces actionable intelligence
-to sales and growth teams through a live dashboard.
-
-It combines a headless browser-based collection layer, an AI-powered intent classification
-agent, a rule-and-ML scoring engine, and an automation layer that can trigger outreach
-workflows automatically — all presented through a modern real-time dashboard.
-
----
-
-## 🔍 Problem Statement
-
-Sales and growth teams waste enormous time manually monitoring competitor moves, funding
-news, and hiring signals across dozens of sources. By the time a signal is noticed and acted
-on, the window has closed. There is no unified, automated system that:
-
-- Continuously collects signals from multiple sources
-- Understands the *intent* behind each signal (hiring? fundraising? expansion?)
-- Prioritises leads by recency, relevance, and company fit
-- Triggers the right outreach at the right moment
-
-Signal-Main solves this by automating the full pipeline from raw signal to prioritised,
-actionable lead.
-
----
-
-## 🎯 Goals
-
-- [ ] Harvest signals from ≥3 sources (web scraping, LinkedIn, news feeds)
-- [ ] Classify each signal's intent using AI (OpenAI + regex fallback)
-- [ ] Score and rank leads using a multi-factor model
-- [ ] Expose a clean REST API for signal ingestion and lead retrieval
-- [ ] Display live lead queue and analytics in a real-time dashboard
-- [ ] Trigger stub automation actions (email draft, CRM log) per lead
-- [ ] Deploy as a single-command runnable stack
-
----
-
-## 🏗️ High-Level Architecture
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                          Signal-Main Pipeline                       │
-│                                                                     │
-│   ┌───────────┐    ┌───────────┐    ┌───────────────┐              │
-│   │ Collection │───▶│  Intent   │───▶│ Prioritization│              │
-│   │   Agent   │    │   Agent   │    │    Agent      │              │
-│   │(scraper + │    │(OpenAI +  │    │ (scoring model│              │
-│   │  ingestion│    │  regex)   │    │  + filters)   │              │
-│   └───────────┘    └───────────┘    └──────┬────────┘              │
-│                                            │                        │
-│                                     ┌──────▼────────┐              │
-│                                     │  Automation   │              │
-│                                     │    Agent      │              │
-│                                     │ (action log,  │              │
-│                                     │  outreach stub│              │
-│                                     └──────┬────────┘              │
-│                                            │                        │
-│                                     ┌──────▼────────┐              │
-│                                     │   Dashboard   │              │
-│                                     │ (Next.js SPA, │              │
-│                                     │  real-time    │              │
-│                                     │  lead queue)  │              │
-│                                     └───────────────┘              │
-└─────────────────────────────────────────────────────────────────────┘
+```mermaid
+graph TD
+    A[Manual Input] --> F
+    B[RSS Feeds] --> F
+    C[Websites] --> F
+    D[JSON Files] --> F
+    E[Adscraper Data] --> F
+    
+    subgraph Signal-Main Core
+    F[Signal Collection Agent] --> G[PostgreSQL DB]
+    G --> H[Intent Analysis Agent]
+    H --> I[Lead Scoring Agent]
+    I --> J[Recommendation Agent]
+    J --> K[Automation Workflow Agent]
+    end
+    
+    subgraph Interfaces
+    K --> L[Enterprise Next.js Dashboard]
+    G --> M[AI Business Copilot]
+    end
 ```
 
----
+## 🛠️ Technology Stack
+**Frontend:**
+- **Framework**: Next.js 14, React 18
+- **Styling**: TailwindCSS, ShadCN UI
+- **Data Visualization**: Recharts
+- **Icons**: Lucide React
 
-## 📁 Folder Structure
+**Backend:**
+- **Framework**: FastAPI (Python)
+- **Database**: PostgreSQL, SQLAlchemy ORM
+- **AI Models**: OpenAI GPT (gpt-4-turbo)
+- **Validation**: Pydantic
 
-```
+## 📂 Folder Structure
+```text
 signal-main/
-├── backend/               # FastAPI backend — REST API, agents, DB models
+├── backend/
 │   ├── app/
-│   │   ├── main.py
-│   │   ├── models.py
-│   │   ├── schemas.py
-│   │   ├── db.py
-│   │   ├── routers/
-│   │   └── services/
+│   │   ├── collectors/       # Modular ingestion engines
+│   │   ├── database/         # Postgres connections
+│   │   ├── models/           # SQLAlchemy schemas (Signal, Lead, Intent, Action)
+│   │   ├── prompts/          # Hardened GPT system prompts
+│   │   ├── routers/          # FastAPI Routes (/signals, /collect, /copilot, /automation, /demo)
+│   │   └── services/         # Multi-Agent AI Core logic
 │   └── requirements.txt
-│
-├── frontend/              # Next.js dashboard — real-time lead intelligence UI
-│   ├── app/
-│   ├── components/
-│   └── package.json
-│
-├── docs/                  # Architecture diagrams, API docs, design notes
-│
-├── sample_signals/        # Sample JSON payloads for testing ingestion
-│
-├── README.md              # This file
-└── .gitignore
+└── frontend/
+    ├── src/
+    │   ├── app/
+    │   │   ├── page.tsx      # Main Dashboard
+    │   │   ├── layout.tsx
+    │   │   └── globals.css   # Dark theme tokens
+    │   └── lib/              # Utils (clsx/tailwind-merge)
+    ├── tailwind.config.ts
+    └── package.json
 ```
 
----
+## 🚀 Installation & Setup
 
-## 🛠️ Tech Stack (Planned)
+1. **Clone & Environment Setup**
+```bash
+git clone https://github.com/Sayan1355/Mopsy.git
+cd Mopsy/signal-main/backend
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
 
-| Layer | Technology |
-|---|---|
-| **Backend API** | Python 3.11+, FastAPI, SQLAlchemy 2.0, Alembic |
-| **Database** | PostgreSQL 16 |
-| **AI / NLP** | OpenAI GPT-4o (intent classification), regex fallback |
-| **Web Collection** | Playwright (headless browser scraping) |
-| **Frontend** | Next.js 14 (App Router), TypeScript, Tailwind CSS |
-| **Real-time** | Server-Sent Events (SSE) or WebSocket |
-| **Infra** | Docker Compose (optional), nvm for Node, venv for Python |
-| **Testing** | pytest (backend), Vitest (frontend) |
+2. **Environment Variables (`.env`)**
+```env
+DATABASE_URL=postgresql://user:password@localhost/signal_main
+OPENAI_API_KEY=sk-proj-...
+OPENAI_MODEL=gpt-4-turbo
+```
 
----
+3. **Run Backend**
+```bash
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+4. **Run Frontend**
+```bash
+cd ../frontend
+npm install
+npm run dev
+```
+
+## 🔌 API Endpoints
+- `POST /api/v1/collect`: Universal ingestion endpoint.
+- `POST /api/v1/signals/ingest`: Direct pipeline entry.
+- `POST /api/v1/automation/{lead_id}`: Trigger email/CRM automation.
+- `POST /api/v1/copilot/chat`: NLP database search.
+- `POST /api/v1/demo/populate`: **HACKATHON DEMO MODE** - Generates realistic data instantly!
+
+## 🔮 Future Scope
+- Automated direct CRM Syncing (HubSpot/Salesforce).
+- Real-time dynamic web scraping pipelines via Playwright integration.
+- Full OAuth2 User Authentication.
 
 ## 👥 Team Members
-
-| Name | Role |
-|---|---|
-| *(placeholder)* | *(placeholder)* |
-
----
-
-## 📄 License
-
-*(License placeholder — to be decided)*
+Developed as part of the Multi-Agent AI Hackathon Sprint.
