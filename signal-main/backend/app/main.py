@@ -1,14 +1,37 @@
 """
 Signal-Main — FastAPI Application Entry Point
 
-Phase 2: Backend scaffolding only.
-No database connections, no AI agents, no scraping.
+Phase 3: Database connectivity added.
+- PostgreSQL connected via SQLAlchemy on startup.
+- All Phase 2 endpoints preserved.
 """
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
+from app.database.database import check_db_connection
 from app.routers import health
+
+
+# ---------------------------------------------------------------------------
+# Lifespan — runs once on startup and once on shutdown
+# ---------------------------------------------------------------------------
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # --- Startup ---
+    print("[Signal-Main] Starting up...")
+    if check_db_connection():
+        print("[Signal-Main] ✅ Connected to PostgreSQL")
+    else:
+        print("[Signal-Main] ❌ Database connection failed — check DATABASE_URL in .env")
+
+    yield  # application runs here
+
+    # --- Shutdown ---
+    print("[Signal-Main] Shutting down.")
+
 
 # ---------------------------------------------------------------------------
 # App instance
@@ -23,6 +46,7 @@ app = FastAPI(
     ),
     docs_url="/docs",
     redoc_url="/redoc",
+    lifespan=lifespan,
 )
 
 # ---------------------------------------------------------------------------

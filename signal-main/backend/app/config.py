@@ -2,7 +2,7 @@
 Signal-Main Backend Configuration
 
 Uses pydantic-settings to load from environment variables / .env file.
-No database connection is established in Phase 2.
+Phase 3: DATABASE_URL is now active — SQLAlchemy connects on startup.
 """
 from pydantic_settings import BaseSettings
 
