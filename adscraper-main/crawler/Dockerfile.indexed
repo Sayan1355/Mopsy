@@ -1,0 +1,22 @@
+# k8s adscraper worker image, for indexed jobs. Pushes to
+# ezeng/adscraper:k8s-indexed-job-worker
+FROM ghcr.io/puppeteer/puppeteer:23.4.0
+
+USER root
+RUN apt-get update && apt-get install -y curl ca-certificates amqp-tools jq
+
+# Add Tini
+ENV TINI_VERSION v0.19.0
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
+RUN chmod +x /tini
+
+USER pptruser
+
+COPY --chown=pptruser:pptruser package*.json .
+RUN npm install
+COPY --chown=pptruser:pptruser . .
+RUN npx tsc \
+    && npx typescript-json-schema ./tsconfig.json CrawlerFlags > ./gen/crawlerFlagsSchema.json
+
+ENTRYPOINT ["/tini", "--"]
+CMD ["node", "gen/k8s-indexed-job-worker.js"]

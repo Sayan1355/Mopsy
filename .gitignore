@@ -1,0 +1,71 @@
+# adscraper-main: exclude generated/dependency files
+adscraper-main/crawler/node_modules/
+adscraper-main/crawler/gen/
+adscraper-main/crawler/output/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+ENV/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+.npm
+*.tgz
+.yarn-integrity
+
+# Next.js
+.next/
+out/
+.vercel/
+.turbo/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+
+# Test/Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+coverage/
+.nyc_output/
+
+# Misc
+tmp/
+temp/
+.cache/
+.mypy_cache/
