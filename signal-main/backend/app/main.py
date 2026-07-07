@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.database.database import check_db_connection, engine, Base
-from app.routers import health, signals
+from app.routers import health, signals, collect
 import app.models  # Ensure models are imported for create_all
 
 
@@ -70,6 +70,7 @@ app.add_middleware(
 # ---------------------------------------------------------------------------
 app.include_router(health.router)
 app.include_router(signals.router)
+app.include_router(collect.router)
 
 # ---------------------------------------------------------------------------
 # Root endpoint
