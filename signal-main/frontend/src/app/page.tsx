@@ -7,7 +7,8 @@ import {
 } from 'recharts';
 import { 
   Bell, Search, Zap, ArrowUpRight, CheckCircle2, AlertCircle, 
-  MessageSquare, TrendingUp, Users, DollarSign, Activity, Target
+  MessageSquare, TrendingUp, Users, DollarSign, Activity, Target,
+  Copy, Trash2, Loader2
 } from 'lucide-react';
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
@@ -16,6 +17,37 @@ export default function Dashboard() {
   const [signals, setSignals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedLead, setSelectedLead] = useState<any>(null);
+
+  // Copilot State
+  const [chatHistory, setChatHistory] = useState<{role: 'user' | 'assistant', content: string}[]>([
+    { role: 'assistant', content: 'Hi! I\'m your Signal-Main AI. Ask me about leads, intents, or trends!' }
+  ]);
+  const [chatInput, setChatInput] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
+
+  const handleChatSubmit = async (e?: React.FormEvent, presetMsg?: string) => {
+    if (e) e.preventDefault();
+    const msg = presetMsg || chatInput;
+    if (!msg.trim()) return;
+
+    setChatHistory(prev => [...prev, { role: 'user', content: msg }]);
+    setChatInput("");
+    setChatLoading(true);
+
+    try {
+      const res = await fetch('http://localhost:8000/api/v1/copilot/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: msg })
+      });
+      const data = await res.json();
+      setChatHistory(prev => [...prev, { role: 'assistant', content: data.response || 'No response.' }]);
+    } catch (err) {
+      setChatHistory(prev => [...prev, { role: 'assistant', content: 'Error connecting to Copilot API.' }]);
+    } finally {
+      setChatLoading(false);
+    }
+  };
 
   useEffect(() => {
     // Fetch signals from our backend
@@ -167,25 +199,57 @@ export default function Dashboard() {
           
           {/* AI Copilot */}
           <div className="bg-secondary/40 border border-accent/20 rounded-xl p-5 flex flex-col h-full shadow-[0_0_15px_rgba(59,130,246,0.1)]">
-            <h3 className="text-sm font-semibold flex items-center gap-2 mb-4">
-              <MessageSquare className="w-4 h-4 text-accent" /> AI Copilot
-            </h3>
-            <div className="flex-1 space-y-3 overflow-y-auto mb-4 text-sm">
-              <div className="bg-background border border-border rounded-lg p-3 text-slate-300">
-                <p>Hi! I'm your Signal-Main AI. Try asking me:</p>
-                <ul className="mt-2 space-y-1 text-xs text-accent">
-                  <li className="cursor-pointer hover:underline">→ Why is TechNova High Priority?</li>
-                  <li className="cursor-pointer hover:underline">→ Show all funding signals.</li>
-                  <li className="cursor-pointer hover:underline">→ Which industry has highest scores?</li>
-                </ul>
-              </div>
-            </div>
-            <div className="relative mt-auto">
-              <input type="text" placeholder="Ask AI..." className="w-full bg-background border border-border rounded-lg pl-3 pr-10 py-2 text-sm focus:outline-none focus:border-accent" />
-              <button className="absolute right-2 top-1/2 -translate-y-1/2 bg-accent text-white p-1 rounded-md hover:bg-blue-600 transition-colors">
-                <ArrowUpRight size={14} />
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold flex items-center gap-2">
+                <MessageSquare className="w-4 h-4 text-accent" /> AI Business Copilot
+              </h3>
+              <button onClick={() => setChatHistory([{ role: 'assistant', content: 'Hi! I\'m your Signal-Main AI. Ask me about leads, intents, or trends!' }])} className="text-muted-foreground hover:text-white transition-colors">
+                <Trash2 size={14} />
               </button>
             </div>
+            
+            <div className="flex-1 overflow-y-auto mb-4 space-y-3 pr-2 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
+              {chatHistory.map((msg, i) => (
+                <div key={i} className={`text-sm p-3 rounded-lg flex items-start gap-2 ${msg.role === 'user' ? 'bg-accent/10 border border-accent/20 text-blue-100 ml-4' : 'bg-background border border-border text-slate-300 mr-4'}`}>
+                  {msg.role === 'assistant' && <div className="mt-0.5"><Zap size={14} className="text-accent"/></div>}
+                  <div className="flex-1 whitespace-pre-wrap">{msg.content}</div>
+                  {msg.role === 'assistant' && (
+                    <button onClick={() => navigator.clipboard.writeText(msg.content)} className="opacity-50 hover:opacity-100 transition-opacity">
+                      <Copy size={12} />
+                    </button>
+                  )}
+                </div>
+              ))}
+              {chatLoading && (
+                <div className="text-sm p-3 rounded-lg bg-background border border-border text-slate-300 mr-4 flex items-center gap-2 w-fit">
+                  <Loader2 size={14} className="animate-spin text-accent" /> Typing...
+                </div>
+              )}
+            </div>
+
+            {chatHistory.length === 1 && (
+              <div className="mb-4">
+                <p className="text-xs text-muted-foreground mb-2">Suggested Questions:</p>
+                <div className="flex flex-wrap gap-2 text-[10px]">
+                  <span onClick={() => handleChatSubmit(undefined, "Why is TechNova High Priority?")} className="bg-background border border-border px-2 py-1 rounded-full cursor-pointer hover:border-accent transition-colors">Why is TechNova High Priority?</span>
+                  <span onClick={() => handleChatSubmit(undefined, "Show Highest Lead Score")} className="bg-background border border-border px-2 py-1 rounded-full cursor-pointer hover:border-accent transition-colors">Show Highest Lead Score</span>
+                  <span onClick={() => handleChatSubmit(undefined, "Latest Hiring Signals")} className="bg-background border border-border px-2 py-1 rounded-full cursor-pointer hover:border-accent transition-colors">Latest Hiring Signals</span>
+                </div>
+              </div>
+            )}
+
+            <form onSubmit={handleChatSubmit} className="relative mt-auto">
+              <input 
+                type="text" 
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                placeholder="Ask AI Copilot..." 
+                className="w-full bg-background border border-border rounded-lg pl-3 pr-10 py-2 text-sm focus:outline-none focus:border-accent transition-colors" 
+              />
+              <button type="submit" disabled={chatLoading} className="absolute right-2 top-1/2 -translate-y-1/2 bg-accent text-white p-1 rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50">
+                <ArrowUpRight size={14} />
+              </button>
+            </form>
           </div>
         </div>
 
