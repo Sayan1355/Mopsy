@@ -11,7 +11,9 @@ from sqlalchemy.orm import Session
 
 from app.database.database import get_db
 from app.schemas.signal import SignalCreate, SignalResponse
-from app.services import signal_service
+from app.schemas.intent import IntentCreate, IntentResponse
+from app.services import signal_service, intent_service
+from app.services.intent_agent import analyze_intent
 
 router = APIRouter(prefix="/api/v1/signals", tags=["Signals"])
 
@@ -19,16 +21,40 @@ router = APIRouter(prefix="/api/v1/signals", tags=["Signals"])
 @router.post("/ingest", status_code=status.HTTP_201_CREATED)
 def ingest_signal(signal_in: SignalCreate, db: Session = Depends(get_db)):
     """
-    Ingest a raw business signal.
+    Ingest a raw business signal, store it, analyze intent, and store the intent.
     """
     try:
+        # 1. Store Signal
         new_signal = signal_service.create_signal(db=db, signal_data=signal_in)
+        
+        # 2. Analyze Intent
+        analysis_result = analyze_intent(
+            company_name=new_signal.company_name,
+            raw_text=new_signal.raw_text
+        )
+        
+        # 3. Store Intent
+        intent_data = IntentCreate(
+            signal_id=new_signal.id,
+            intent=analysis_result["intent"],
+            confidence=analysis_result["confidence"],
+            reasoning=analysis_result["reasoning"]
+        )
+        new_intent = intent_service.create_intent(db=db, intent_data=intent_data)
+        
+        # 4. Return both
         return {
-            "message": "Signal stored successfully",
-            "signal": SignalResponse.model_validate(new_signal)
+            "message": "Signal analyzed successfully",
+            "signal": SignalResponse.model_validate(new_signal),
+            "intent": {
+                "intent": new_intent.intent,
+                "confidence": new_intent.confidence,
+                "reasoning": new_intent.reasoning,
+                "category": analysis_result["category"]
+            }
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to ingest signal: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to ingest and analyze signal: {str(e)}")
 
 
 @router.get("", response_model=List[SignalResponse])
