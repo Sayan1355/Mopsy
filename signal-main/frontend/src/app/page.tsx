@@ -307,13 +307,13 @@ export default function Dashboard() {
           </div>
 
           {/* Recommendation Panel */}
-          <div className="bg-secondary border border-border rounded-xl p-5 flex flex-col">
+          <div className="bg-secondary border border-border rounded-xl p-5 flex flex-col h-full">
             <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
               <Zap className="w-4 h-4 text-warning" /> Recommendation Engine
             </h3>
             
             {selectedLead !== null ? (
-              <div className="space-y-4 flex-1">
+              <div className="space-y-4 flex-1 flex flex-col">
                 <div className="bg-background border border-border rounded-lg p-4">
                   <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Next Best Action</p>
                   <p className="text-sm font-medium text-white">Contact the CTO within 24 hours.</p>
@@ -337,12 +337,27 @@ export default function Dashboard() {
                   </p>
                 </div>
 
-                <button className="w-full mt-auto bg-accent text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors">
-                  Execute Action
-                </button>
+                <div className="mt-auto space-y-3 pt-4">
+                  <button 
+                    onClick={() => {
+                      alert('Automation Workflow Triggered!\n\nEmail Generated\nCRM Entry Created\nLinkedIn Drafted\nReminder Scheduled');
+                    }}
+                    className="w-full bg-accent text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors shadow-lg shadow-accent/20 flex items-center justify-center gap-2"
+                  >
+                    <Zap size={14} className="fill-white" /> Execute Automation Workflow
+                  </button>
+                  <div className="text-center">
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Automation Previews</span>
+                    <div className="flex justify-center gap-2 mt-2">
+                      <span className="bg-background border border-border text-[10px] px-2 py-1 rounded text-slate-300">📧 Email</span>
+                      <span className="bg-background border border-border text-[10px] px-2 py-1 rounded text-slate-300">👥 CRM</span>
+                      <span className="bg-background border border-border text-[10px] px-2 py-1 rounded text-slate-300">📅 Reminder</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-center text-muted-foreground">
+              <div className="flex-1 flex flex-col items-center justify-center text-center text-muted-foreground py-12">
                 <Target className="w-12 h-12 mb-3 opacity-20" />
                 <p className="text-sm">Select a lead from the queue<br/>to view AI recommendations.</p>
               </div>
