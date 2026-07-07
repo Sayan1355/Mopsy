@@ -11,8 +11,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.database.database import check_db_connection
+from app.database.database import check_db_connection, engine, Base
 from app.routers import health
+import app.models  # Ensure models are imported for create_all
 
 
 # ---------------------------------------------------------------------------
@@ -24,6 +25,10 @@ async def lifespan(app: FastAPI):
     print("[Signal-Main] Starting up...")
     if check_db_connection():
         print("[Signal-Main] ✅ Connected to PostgreSQL")
+        # Create all tables
+        print("[Signal-Main] ⏳ Creating database tables...")
+        Base.metadata.create_all(bind=engine)
+        print("[Signal-Main] ✅ Database tables created")
     else:
         print("[Signal-Main] ❌ Database connection failed — check DATABASE_URL in .env")
 
