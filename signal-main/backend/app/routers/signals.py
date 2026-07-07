@@ -14,9 +14,11 @@ from app.schemas.signal import SignalCreate, SignalResponse
 from app.schemas.intent import IntentCreate, IntentResponse
 from app.schemas.lead import LeadCreate
 from app.models.lead import LeadPriorityEnum
-from app.services import signal_service, intent_service, lead_service
+from app.schemas.action import ActionCreate
+from app.services import signal_service, intent_service, lead_service, action_service
 from app.services.intent_agent import analyze_intent
 from app.services.lead_scoring_agent import analyze_lead
+from app.services.recommendation_agent import analyze_recommendation
 
 router = APIRouter(prefix="/api/v1/signals", tags=["Signals"])
 
@@ -24,7 +26,7 @@ router = APIRouter(prefix="/api/v1/signals", tags=["Signals"])
 @router.post("/ingest", status_code=status.HTTP_201_CREATED)
 def ingest_signal(signal_in: SignalCreate, db: Session = Depends(get_db)):
     """
-    Ingest a raw business signal, store it, analyze intent, store intent, score lead, and store lead.
+    Ingest a raw business signal, store it, analyze intent, store intent, score lead, store lead, generate recommendations, and store action.
     """
     try:
         # 1. Store Signal
@@ -71,9 +73,24 @@ def ingest_signal(signal_in: SignalCreate, db: Session = Depends(get_db)):
         )
         new_lead = lead_service.create_lead(db=db, lead_data=lead_data)
         
-        # 6. Return all
+        # 6. Recommendation Agent
+        rec_analysis = analyze_recommendation(
+            company_name=new_signal.company_name,
+            raw_text=new_signal.raw_text,
+            intent=intent_analysis["intent"],
+            lead_score=new_lead.lead_score
+        )
+        
+        # 7. Store Recommendation (Action)
+        action_data = ActionCreate(
+            lead_id=new_lead.id,
+            recommended_action=rec_analysis["next_best_action"]
+        )
+        new_action = action_service.create_action(db=db, action_data=action_data)
+        
+        # 8. Return all
         return {
-            "message": "Signal analyzed successfully",
+            "message": "Signal processed successfully",
             "signal": SignalResponse.model_validate(new_signal),
             "intent": {
                 "intent": new_intent.intent,
@@ -88,10 +105,18 @@ def ingest_signal(signal_in: SignalCreate, db: Session = Depends(get_db)):
                 "lead_quality": lead_analysis["lead_quality"],
                 "confidence": lead_analysis["confidence"],
                 "reason": lead_analysis["reason"]
+            },
+            "recommendation": {
+                "next_best_action": rec_analysis["next_best_action"],
+                "communication_channel": rec_analysis["communication_channel"],
+                "follow_up_timeline": rec_analysis["follow_up_timeline"],
+                "opportunity_summary": rec_analysis["opportunity_summary"],
+                "risk_level": rec_analysis["risk_level"],
+                "reasoning": rec_analysis["reasoning"]
             }
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to ingest and analyze signal: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to process signal: {str(e)}")
 
 
 @router.get("", response_model=List[SignalResponse])
