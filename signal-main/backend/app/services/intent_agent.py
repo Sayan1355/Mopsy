@@ -9,24 +9,38 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-# Fallback Rules
+# Extended Fallback Rules for Hackathon Demo without API Key
 RULES = {
+    # Hiring / Growth
     "hiring": ("Hiring", "Growth"),
     "hire": ("Hiring", "Growth"),
+    "careers": ("Hiring", "Growth"),
+    "jobs": ("Hiring", "Growth"),
+    
+    # Funding / Finance
     "funding": ("Funding", "Finance"),
     "raised": ("Funding", "Finance"),
+    "invest": ("Investment", "Finance"),
+    "series": ("Funding", "Finance"),
+    
+    # Tech / Platform / Launches
+    "api": ("Product Launch", "Strategy"),
+    "platform": ("Expansion", "Growth"),
+    "developer": ("Product Launch", "Strategy"),
+    "data": ("Partnership", "Networking"),
+    "cloud": ("Expansion", "Growth"),
+    "saas": ("Product Launch", "Strategy"),
+    "software": ("Expansion", "Growth"),
+    "crm": ("Buying Intent", "Operations"),
+    "sales": ("Buying Intent", "Operations"),
+    
+    # Business actions
     "launch": ("Product Launch", "Strategy"),
     "new product": ("Product Launch", "Strategy"),
     "partner": ("Partnership", "Networking"),
-    "collaboration": ("Creator Collaboration", "Networking"),
     "acquire": ("Acquisition", "Strategy"),
     "expand": ("Expansion", "Growth"),
-    "office": ("Expansion", "Growth"),
-    "opening": ("Expansion", "Growth"),
-    "invest": ("Investment", "Finance"),
-    "buy": ("Buying Intent", "Operations"),
-    "event": ("Event Participation", "Networking"),
-    "conference": ("Event Participation", "Networking")
+    "buy": ("Buying Intent", "Operations")
 }
 
 def analyze_intent_fallback(raw_text: str) -> Dict[str, Any]:

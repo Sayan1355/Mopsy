@@ -6,3 +6,6 @@ pydantic-settings
 sqlalchemy
 psycopg2-binary
 openai
+tavily-python
+feedparser
+requests

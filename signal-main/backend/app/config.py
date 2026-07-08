@@ -21,6 +21,12 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     openai_model: str = "gpt-4o"
 
+    # Tavily Search API
+    tavily_api_key: str = ""
+
+    # SerpAPI (Google Search)
+    serpapi_key: str = ""
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

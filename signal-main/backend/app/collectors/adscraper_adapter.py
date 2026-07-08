@@ -19,7 +19,7 @@ class AdscraperAdapter(BaseCollector):
         return {
             "company_name": raw_data["advertiser_name"],
             "source": "Website", # Or custom Adscraper source
-            "signal_type": "Other",
+            "signal_type": "Product Launch",
             "raw_text": raw_data["ad_text"],
             "source_url": raw_data.get("ad_url")
         }
